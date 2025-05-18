@@ -13,24 +13,23 @@ public class TelaInicial extends JFrame implements ActionListener {
     private JButton cadastrarButton;
     private JButton navegarButton;
     private TelaLogin telaLogin;
-    private TelaCadastro telaCadastro; // Referência à tela de cadastro
+    private TelaCadastro telaCadastro;
+    private TelaCatalogo telaCatalogo;
 
     public TelaInicial() {
-        // Configurações da janela inicial
         setTitle("Bazar Online - Tela Inicial");
         setSize(550, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        setLocationRelativeTo(null); // Centralizar na tela
+        setLocationRelativeTo(null);
 
-        // Componentes da tela inicial
         nomeBazarLabel = new JLabel("Nome do Bazar");
         nomeBazarLabel.setFont(new Font("Arial", Font.BOLD, 24));
 
         historicoBazarTextArea = new JTextArea("Transforme seu guarda-roupa e o mundo com o nosso Bazar Solidário!\n" + "\n" + "Em um momento de reflexão global, convidamos você a fazer parte de uma revolução na moda. Nosso Bazar Solidário é mais que uma troca de roupas: é um movimento em direção a um futuro mais verde e justo.\n" + "\n" + "Descubra a moda ecológica: valorizamos a beleza da reutilização, a força da doação e a urgência da sustentabilidade. Dê um novo lar àquela peça especial e encontre tesouros únicos, tudo enquanto contribui para um planeta mais saudável e uma comunidade mais forte.\n" + "\n" + "Participe da economia circular: aqui, seus itens ganham nova vida, evitando o desperdício e inspirando um consumo consciente.\n" + "\n" + "Junte-se a nós: seja parte da mudança, adote um estilo com propósito e mostre que a moda pode ser uma poderosa ferramenta de transformação social e ambiental.\n" + "\n" + "Bazar Solidário: Vista essa ideia!");
         historicoBazarTextArea.setLineWrap(true);
         historicoBazarTextArea.setWrapStyleWord(true);
-        historicoBazarTextArea.setSize(450, 350);
+        historicoBazarTextArea.setPreferredSize(new Dimension(500, 300));
         historicoBazarTextArea.setEditable(false);
 
         loginButton = new JButton("Login");
@@ -40,6 +39,12 @@ public class TelaInicial extends JFrame implements ActionListener {
         // Inicializar as telas
         telaLogin = new TelaLogin();
         telaCadastro = new TelaCadastro();
+        telaCatalogo = new TelaCatalogo();
+
+        // Passar as referências necessárias
+        telaLogin.setTelaCatalogo(telaCatalogo);
+        telaCatalogo.setTelaLogin(telaLogin);
+        // (Você pode precisar passar telaCatalogo para telaCadastro também, dependendo do fluxo)
 
         // Adicionar ActionListener aos botões
         loginButton.addActionListener(this);
@@ -65,12 +70,14 @@ public class TelaInicial extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == loginButton) {
-            telaLogin.mostrar(); // Mostrar a tela de login
+            telaLogin.setLocationRelativeTo(this);
+            telaLogin.mostrar();
         } else if (e.getSource() == cadastrarButton) {
-            telaCadastro.mostrar(); // Mostrar a tela de cadastro
+            telaCadastro.setLocationRelativeTo(this);
+            telaCadastro.mostrar();
         } else if (e.getSource() == navegarButton) {
-            System.out.println("Botão de Navegar sem login clicado!");
-            // Aqui você implementaria a navegação sem login
+            telaCatalogo.setLocationRelativeTo(this);
+            telaCatalogo.mostrar();
         }
     }
 }

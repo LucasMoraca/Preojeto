@@ -7,12 +7,13 @@ public class TelaLogin extends JFrame {
     private JTextField campoEmail;
     private JPasswordField campoSenha;
     private JButton botaoEntrar;
+    private TelaCatalogo telaCatalogo; // Mantenha a referência
 
     public TelaLogin() {
         setTitle("Login");
-        setSize(350, 200); // Aumentando um pouco o tamanho
+        setSize(350, 200);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null); // Centralizar na tela ao ser criada
+        setLocationRelativeTo(null);
 
         JPanel painelCampos = new JPanel(new GridLayout(2, 2, 10, 10));
         painelCampos.add(new JLabel("Email:", SwingConstants.RIGHT));
@@ -28,25 +29,41 @@ public class TelaLogin extends JFrame {
         JPanel painelBotao = new JPanel(new FlowLayout(FlowLayout.CENTER));
         painelBotao.add(botaoEntrar);
 
-        setLayout(new BorderLayout(10, 10)); // Layout principal BorderLayout
+        setLayout(new BorderLayout(10, 10));
         add(painelCampos, BorderLayout.CENTER);
         add(painelBotao, BorderLayout.SOUTH);
-        add(Box.createVerticalStrut(10), BorderLayout.NORTH); // Espaçamento superior
-        add(Box.createHorizontalStrut(10), BorderLayout.WEST);  // Espaçamento esquerdo
-        add(Box.createHorizontalStrut(10), BorderLayout.EAST); // Espaçamento direito
+        add(Box.createVerticalStrut(10), BorderLayout.NORTH);
+        add(Box.createHorizontalStrut(10), BorderLayout.WEST);
+        add(Box.createHorizontalStrut(10), BorderLayout.EAST);
+
+        // Inicialize a TelaCatalogo aqui - REMOVA ESTA LINHA DO CONSTRUTOR
+        // telaCatalogo = new TelaCatalogo();
 
         botaoEntrar.addActionListener(e -> {
             String email = campoEmail.getText();
             String senha = new String(campoSenha.getPassword());
 
-            // Aqui você chamaria a lógica de autenticação
-            System.out.println("Tentativa de login com Email: " + email + ", Senha: " + senha);
-            JOptionPane.showMessageDialog(this, "Implementar lógica de login aqui.");
-            // Se a autenticação fosse bem-sucedida, você poderia fechar esta tela
-            // dispose();
+            if ("teste@email.com".equals(email) && "123".equals(senha)) {
+                JOptionPane.showMessageDialog(this, "Login bem-sucedido!");
+                SwingUtilities.invokeLater(() -> {
+                    // Certifique-se de que telaCatalogo foi definida antes de usar
+                    if (telaCatalogo != null) {
+                        telaCatalogo.setLocationRelativeTo(this);
+                        telaCatalogo.mostrar();
+                        dispose();
+                    }
+                });
+            } else {
+                JOptionPane.showMessageDialog(this, "Email ou senha incorretos.");
+            }
         });
 
         setVisible(false);
+    }
+
+    // Método para receber a instância de TelaCatalogo
+    public void setTelaCatalogo(TelaCatalogo telaCatalogo) {
+        this.telaCatalogo = telaCatalogo;
     }
 
     public void mostrar() {
@@ -54,6 +71,6 @@ public class TelaLogin extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new TelaLogin().setVisible(true));
+        SwingUtilities.invokeLater(() -> new TelaLogin().mostrar());
     }
 }

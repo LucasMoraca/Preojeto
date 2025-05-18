@@ -8,12 +8,13 @@ public class TelaCadastro extends JFrame {
     private JTextField campoEmail;
     private JPasswordField campoSenha;
     private JButton botaoCadastrar;
+    private TelaCatalogo telaCatalogo; // Adicione esta linha
 
     public TelaCadastro() {
         setTitle("Cadastrar-se");
-        setSize(350, 250); // Aumentando um pouco a altura
+        setSize(350, 250);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null); // Centralizar na tela ao ser criada
+        setLocationRelativeTo(null);
 
         JPanel painelCampos = new JPanel(new GridLayout(3, 2, 10, 10));
         painelCampos.add(new JLabel("Nome:", SwingConstants.RIGHT));
@@ -40,6 +41,9 @@ public class TelaCadastro extends JFrame {
         add(Box.createHorizontalStrut(10), BorderLayout.WEST);
         add(Box.createHorizontalStrut(10), BorderLayout.EAST);
 
+        // Inicialize a TelaCatalogo aqui
+        telaCatalogo = new TelaCatalogo();
+
         botaoCadastrar.addActionListener(e -> {
             String nomeUsuario = campoNomeUsuario.getText();
             String email = campoEmail.getText();
@@ -48,12 +52,16 @@ public class TelaCadastro extends JFrame {
             // Aqui você chamaria a lógica de cadastro
             System.out.println("Tentativa de cadastro com Nome: " + nomeUsuario +
                                ", Email: " + email + ", Senha: " + senha);
-            JOptionPane.showMessageDialog(this, "Implementar lógica de cadastro aqui.");
-            // Após o cadastro bem-sucedido, você pode fechar esta tela
-            // dispose();
+            JOptionPane.showMessageDialog(this, "Cadastro realizado com sucesso!");
+            // Após o cadastro bem-sucedido, abrir TelaCatalogo
+            SwingUtilities.invokeLater(() -> {
+                telaCatalogo.setLocationRelativeTo(this);
+                telaCatalogo.mostrar();
+                dispose(); // Fechar a tela de cadastro
+            });
         });
 
-        setVisible(false);
+        setVisible(false); // Visibilidade inicial controlada por mostrar()
     }
 
     public void mostrar() {
@@ -61,6 +69,6 @@ public class TelaCadastro extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new TelaCadastro().setVisible(true));
+        SwingUtilities.invokeLater(() -> new TelaCadastro().mostrar()); // Usando o método mostrar()
     }
 }
