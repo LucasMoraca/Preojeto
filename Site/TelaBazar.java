@@ -14,6 +14,7 @@ public class TelaBazar extends JFrame implements ActionListener {
     private JButton adicionarProdutoButton;
     private JButton editarProdutoButton;
     private JButton eliminarProdutoButton;
+    private TelaAdicionarProduto telaAdicionarProduto; // Referência para a tela de adicionar produto
 
     // Construtor da classe TelaBazar
     public TelaBazar() {
@@ -33,6 +34,9 @@ public class TelaBazar extends JFrame implements ActionListener {
         adicionarProdutoButton = new JButton("Adicionar Produto");
         editarProdutoButton = new JButton("Editar Produto");
         eliminarProdutoButton = new JButton("Eliminar Produto");
+
+        // Inicializa a tela de adicionar produto (mas não a torna visível ainda)
+        telaAdicionarProduto = new TelaAdicionarProduto();
 
         // Adiciona a própria instância de TelaBazar como ouvinte de ação para cada botão.
         // Isso significa que o método actionPerformed desta classe será chamado quando
@@ -63,9 +67,11 @@ public class TelaBazar extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         // Verifica qual botão gerou o evento (foi clicado)
         if (e.getSource() == adicionarProdutoButton) {
-            // Exibe uma mensagem informando que a funcionalidade ainda não foi implementada.
-            // No futuro, aqui seria aberto o painel ou janela para adicionar um produto.
-            JOptionPane.showMessageDialog(this, "Funcionalidade de Adicionar Produto (a implementar)");
+            // Ao clicar no botão "Adicionar Produto":
+            // Centraliza a tela de adicionar produto em relação à tela do bazar
+            telaAdicionarProduto.setLocationRelativeTo(this);
+            // Torna a tela de adicionar produto visível
+            telaAdicionarProduto.mostrar();
         } else if (e.getSource() == editarProdutoButton) {
             // Similar ao anterior, para a funcionalidade de editar produto.
             JOptionPane.showMessageDialog(this, "Funcionalidade de Editar Produto (a implementar)");
