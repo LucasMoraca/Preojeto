@@ -1,3 +1,4 @@
+// TelaCadastro.java (continuação)
 package Site;
 
 import javax.swing.*;
@@ -7,9 +8,13 @@ import java.awt.event.ActionListener;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.DocumentEvent;
 import java.util.Arrays;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.ResultSet;
 
 public class TelaCadastro extends JFrame {
-    // Declaração dos componentes da interface gráfica
     private JTextField campoNomeUsuario;
     private JTextField campoEmail;
     private JPasswordField campoSenha;
@@ -17,18 +22,22 @@ public class TelaCadastro extends JFrame {
     private JTextField campoTelefone;
     private JLabel labelForcaSenhaTexto;
     private JPanel painelForcaSenhaCor;
-    private JButton botaoCadastrarUsuario; // Renomeei o botão de cadastro de usuário
+    private JButton botaoCadastrarUsuario;
     private JButton botaoCadastrarBazar;
     private TelaCatalogo telaCatalogo;
 
-    // Construtor da classe TelaCadastro
+    // Configurações para o banco de dados MySQL
+    private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto"; // Ajuste a URL se necessário
+    private static final String DB_USER = "root"; // Seu usuário do MySQL
+    private static final String DB_PASSWORD = ""; // Sua senha do MySQL
+    private static final String ADMIN_PASSWORD = "admin123";
+
     public TelaCadastro() {
         setTitle("Cadastrar-se");
-        setSize(350, 360); // Aumentei a altura para o novo botão
+        setSize(350, 360);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Painel para os campos de cadastro de usuário
         JPanel painelCamposUsuario = new JPanel(new GridLayout(5, 2, 10, 10));
         painelCamposUsuario.add(new JLabel("Nome:", SwingConstants.RIGHT));
         campoNomeUsuario = new JTextField();
@@ -75,6 +84,7 @@ public class TelaCadastro extends JFrame {
         add(Box.createHorizontalStrut(10), BorderLayout.WEST);
         add(Box.createHorizontalStrut(10), BorderLayout.EAST);
 
+        // telaCatalogo inicializada aqui, será usada após o cadastro de usuário
         telaCatalogo = new TelaCatalogo();
 
         campoSenha.getDocument().addDocumentListener(new DocumentListener() {
@@ -89,7 +99,6 @@ public class TelaCadastro extends JFrame {
             }
         });
 
-        // ActionListener para o cadastro de usuário (como antes)
         botaoCadastrarUsuario.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -109,45 +118,40 @@ public class TelaCadastro extends JFrame {
                     return;
                 }
 
-                if (verificarEmailExistente(email)) {
+                if (isEmailCadastrado("usuarios", email)) {
                     JOptionPane.showMessageDialog(TelaCadastro.this, "Este email já está cadastrado.", "Erro", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
-                System.out.println("Cadastro de Usuário realizado com:");
-                System.out.println("Nome: " + nomeUsuario);
-                System.out.println("Email: " + email);
-                System.out.println("Senha: " + new String(senha));
-                System.out.println("Telefone: " + telefone);
-                JOptionPane.showMessageDialog(TelaCadastro.this, "Cadastro de Usuário realizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-
-                SwingUtilities.invokeLater(() -> {
-                    telaCatalogo.setLocationRelativeTo(TelaCadastro.this);
-                    telaCatalogo.mostrar();
-                    dispose();
-                });
+                if (cadastrarUsuario(nomeUsuario, email, new String(senha), telefone)) {
+                    JOptionPane.showMessageDialog(TelaCadastro.this, "Cadastro de Usuário realizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                    SwingUtilities.invokeLater(() -> {
+                        telaCatalogo.setLocationRelativeTo(TelaCadastro.this);
+                        telaCatalogo.mostrar();
+                        dispose();
+                    });
+                } else {
+                    JOptionPane.showMessageDialog(TelaCadastro.this, "Erro ao cadastrar usuário.", "Erro", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
-        // ActionListener para o cadastro de bazar
         botaoCadastrarBazar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Abre uma caixa de diálogo para inserir a senha de administrador
                 JPasswordField passwordField = new JPasswordField();
                 int option = JOptionPane.showConfirmDialog(TelaCadastro.this, passwordField, "Digite a senha de administrador", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
                 if (option == JOptionPane.OK_OPTION) {
                     char[] adminPassword = passwordField.getPassword();
-                    // Aqui você deve comparar com a senha de administrador real
-                    if (isSenhaAdminCorreta(new String(adminPassword))) {
-                        String nomeUsuario = campoNomeUsuario.getText();
+                    if (ADMIN_PASSWORD.equals(new String(adminPassword))) {
+                        String nomeResponsavel = campoNomeUsuario.getText();
                         String email = campoEmail.getText();
                         char[] senha = campoSenha.getPassword();
                         char[] confirmarSenha = campoConfirmarSenha.getPassword();
                         String telefone = campoTelefone.getText();
 
-                        if (nomeUsuario.isEmpty() || email.isEmpty() || senha.length == 0 || confirmarSenha.length == 0 || telefone.isEmpty()) {
+                        if (nomeResponsavel.isEmpty() || email.isEmpty() || senha.length == 0 || confirmarSenha.length == 0 || telefone.isEmpty()) {
                             JOptionPane.showMessageDialog(TelaCadastro.this, "Todos os campos devem ser preenchidos para cadastrar o bazar.", "Erro", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
@@ -157,19 +161,17 @@ public class TelaCadastro extends JFrame {
                             return;
                         }
 
-                        if (verificarEmailExistente(email)) {
-                            JOptionPane.showMessageDialog(TelaCadastro.this, "Este email já está cadastrado.", "Erro", JOptionPane.ERROR_MESSAGE);
+                        if (isEmailCadastrado("bazares", email)) {
+                            JOptionPane.showMessageDialog(TelaCadastro.this, "Este email já está cadastrado como bazar.", "Erro", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
 
-                        // Lógica para cadastrar o bazar (você precisará implementar isso)
-                        System.out.println("Solicitação de Cadastro de Bazar com:");
-                        System.out.println("Nome: " + nomeUsuario);
-                        System.out.println("Email: " + email);
-                        System.out.println("Senha: " + new String(senha));
-                        System.out.println("Telefone: " + telefone);
-                        JOptionPane.showMessageDialog(TelaCadastro.this, "Solicitação de Cadastro de Bazar enviada para aprovação!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                        // Aqui você pode adicionar a lógica para, por exemplo, salvar essa solicitação em um estado pendente.
+                        if (cadastrarBazar(nomeResponsavel, email, new String(senha), telefone)) {
+                            JOptionPane.showMessageDialog(TelaCadastro.this, "Cadastro de Bazar realizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                            // Opcional: Redirecionar para outra tela ou limpar os campos
+                        } else {
+                            JOptionPane.showMessageDialog(TelaCadastro.this, "Erro ao cadastrar bazar.", "Erro", JOptionPane.ERROR_MESSAGE);
+                        }
 
                     } else {
                         JOptionPane.showMessageDialog(TelaCadastro.this, "Senha de administrador incorreta.", "Erro", JOptionPane.ERROR_MESSAGE);
@@ -181,12 +183,53 @@ public class TelaCadastro extends JFrame {
         setVisible(false);
     }
 
-    // Método para verificar se a senha de administrador está correta
-    private boolean isSenhaAdminCorreta(String senhaDigitada) {
-        // *** IMPORTANTE: Em uma aplicação real, NUNCA codifique a senha diretamente no código.
-        // *** Use métodos seguros como hashing com salt para armazenar e verificar senhas.
-        String senhaAdminCorreta = "admin123"; // Senha de administrador de exemplo
-        return senhaDigitada.equals(senhaAdminCorreta);
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+    }
+
+    private boolean cadastrarUsuario(String nome, String email, String senha, String telefone) {
+        String sql = "INSERT INTO usuarios (nome_usuario, email, senha, telefone) VALUES (?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, nome);
+            pstmt.setString(2, email);
+            pstmt.setString(3, senha);
+            pstmt.setString(4, telefone);
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            System.out.println("Erro ao cadastrar usuário: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean cadastrarBazar(String nomeResponsavel, String email, String senha, String telefone) {
+        String sql = "INSERT INTO bazares (nome_responsavel, email, senha, telefone) VALUES (?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, nomeResponsavel);
+            pstmt.setString(2, email);
+            pstmt.setString(3, senha);
+            pstmt.setString(4, telefone);
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            System.out.println("Erro ao cadastrar bazar: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean isEmailCadastrado(String tabela, String email) {
+        String sql = "SELECT email FROM " + tabela + " WHERE email = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, email);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            System.out.println("Erro ao verificar email: " + e.getMessage());
+            return false;
+        }
     }
 
     private void atualizarForcaSenhaVisual() {
@@ -223,14 +266,8 @@ public class TelaCadastro extends JFrame {
         return forca;
     }
 
-    private boolean verificarEmailExistente(String email) {
-        String[] emailsExistentes = {"teste@email.com", "outro@email.com"};
-        for (String e : emailsExistentes) {
-            if (e.equalsIgnoreCase(email)) {
-                return true;
-            }
-        }
-        return false;
+    public void setTelaCatalogo(TelaCatalogo telaCatalogo) {
+        this.telaCatalogo = telaCatalogo;
     }
 
     public void mostrar() {

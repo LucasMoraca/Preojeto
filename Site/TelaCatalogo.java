@@ -6,12 +6,9 @@ import java.awt.*;
 public class TelaCatalogo extends JFrame {
 
     private JPanel painelLateralFiltros;
-    private JTextField campoPesquisa;
     private JPanel painelListagemItens;
     private JButton botaoPerfil;
     private JButton botaoCarrinho;
-    private JButton botaoDoar;
-    private JButton botaoNotificacoes;
     private TelaLogin telaLogin; // Referência para a tela de login
 
     public TelaCatalogo() {
@@ -21,33 +18,16 @@ public class TelaCatalogo extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Inicializar telas que podem ser abertas a partir daqui - REMOVA ESTA LINHA DO CONSTRUTOR
-        // telaLogin = new TelaLogin();
-
-        // Painel superior para ícones e barra de pesquisa
+        // Painel superior para ícones
         JPanel painelSuperior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        campoPesquisa = new JTextField(20);
-        JButton botaoBuscar = new JButton("Buscar");
         botaoPerfil = new JButton("Perfil");
         botaoCarrinho = new JButton("Carrinho");
-        botaoDoar = new JButton("Doar");
-        botaoNotificacoes = new JButton("Notificações");
 
-        painelSuperior.add(campoPesquisa);
-        painelSuperior.add(botaoBuscar);
         painelSuperior.add(botaoPerfil);
         painelSuperior.add(botaoCarrinho);
-        painelSuperior.add(botaoDoar);
-        painelSuperior.add(botaoNotificacoes);
 
         add(painelSuperior, BorderLayout.NORTH);
-
-        botaoBuscar.addActionListener(e -> {
-            String textoPesquisa = campoPesquisa.getText();
-            System.out.println("Pesquisando por: " + textoPesquisa);
-            JOptionPane.showMessageDialog(this, "Buscar por: " + textoPesquisa + " (a implementar)");
-        });
 
         painelLateralFiltros = new JPanel();
         painelLateralFiltros.setPreferredSize(new Dimension(200, getHeight()));
@@ -66,10 +46,6 @@ public class TelaCatalogo extends JFrame {
         painelLateralFiltros.add(new JCheckBox("G"));
         painelLateralFiltros.add(Box.createVerticalStrut(10));
 
-        painelLateralFiltros.add(new JLabel("Valor Médio:"));
-        painelLateralFiltros.add(new JSlider(0, 100, 50));
-        painelLateralFiltros.add(new JLabel("R$ 0 - R$ 100"));
-
         add(painelLateralFiltros, BorderLayout.WEST);
 
         painelListagemItens = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
@@ -81,28 +57,24 @@ public class TelaCatalogo extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
 
         botaoPerfil.addActionListener(e -> {
-            boolean usuarioLogado = false; // Substitua pela sua lógica real
-            if (usuarioLogado) {
-                JOptionPane.showMessageDialog(this, "Abrir tela de perfil (a implementar)");
-            } else {
-                // Certifique-se de que telaLogin foi definida antes de usar
+            // Simulação de verificação de login
+            boolean usuarioLogado = true; // Mude para sua lógica real de verificação de login
+            if (!usuarioLogado) {
+                // Se não estiver logado, mostra a tela de login
                 if (telaLogin != null) {
                     telaLogin.setLocationRelativeTo(this);
                     telaLogin.mostrar();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Você precisa estar logado para acessar o perfil.", "Aviso", JOptionPane.WARNING_MESSAGE);
+                    // Opcional: Criar e mostrar TelaLogin aqui se ela não foi passada
                 }
+            } else {
+                JOptionPane.showMessageDialog(this, "Abrir tela de perfil (a implementar)");
             }
         });
 
         botaoCarrinho.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Abrir tela do carrinho (a implementar)");
-        });
-
-        botaoDoar.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Abrir tela de doação (a implementar)");
-        });
-
-        botaoNotificacoes.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Abrir tela de notificações (a implementar)");
         });
 
         setVisible(false);

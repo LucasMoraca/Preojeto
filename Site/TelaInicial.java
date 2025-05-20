@@ -1,3 +1,4 @@
+// TelaInicial.java
 package Site;
 
 import javax.swing.*;
@@ -15,6 +16,7 @@ public class TelaInicial extends JFrame implements ActionListener {
     private TelaLogin telaLogin;
     private TelaCadastro telaCadastro;
     private TelaCatalogo telaCatalogo;
+    private TelaBazar telaBazar; // Adicionando referência para TelaBazar
 
     public TelaInicial() {
         setTitle("Bazar Online - Tela Inicial");
@@ -37,14 +39,13 @@ public class TelaInicial extends JFrame implements ActionListener {
         navegarButton = new JButton("Navegar sem login");
 
         // Inicializar as telas
-        telaLogin = new TelaLogin();
-        telaCadastro = new TelaCadastro();
         telaCatalogo = new TelaCatalogo();
+        telaBazar = new TelaBazar(); // Inicializa TelaBazar
+        telaLogin = new TelaLogin(telaCatalogo, telaBazar); // Passa as referências corretas
+        telaCadastro = new TelaCadastro();
 
         // Passar as referências necessárias
-        telaLogin.setTelaCatalogo(telaCatalogo);
-        telaCatalogo.setTelaLogin(telaLogin);
-        // (Você pode precisar passar telaCatalogo para telaCadastro também, dependendo do fluxo)
+        telaCadastro.setTelaCatalogo(telaCatalogo); // Para voltar ao catálogo após cadastro (se necessário)
 
         // Adicionar ActionListener aos botões
         loginButton.addActionListener(this);
