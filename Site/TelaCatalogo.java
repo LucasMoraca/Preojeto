@@ -15,11 +15,11 @@ import javax.swing.border.EmptyBorder;
 public class TelaCatalogo extends JFrame {
 
     private JPanel painelListagemItens;
-    private JButton botaoPerfil;
     private JButton botaoCarrinho;
     private TelaLogin telaLogin; // Referência para a tela de login
     private TelaCarrinho telaCarrinho; // Instância da TelaCarrinho
-    private TelaUsuario telaUsuario; // Nova instância da TelaUsuario
+    // private TelaUsuario telaUsuario; // Removido
+    private JPanel painelSuperior; // Para o botão de carrinho
 
     // Variável estática para rastrear o estado de login
     private static boolean usuarioEstaLogado = false;
@@ -36,15 +36,15 @@ public class TelaCatalogo extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Inicializa a TelaCarrinho e a TelaUsuario
+        // Inicializa a TelaCarrinho
         telaCarrinho = new TelaCarrinho();
-        telaUsuario = new TelaUsuario();
+        // telaUsuario = new TelaUsuario(); // Removido
 
         // Painel superior para ícones
-        JPanel painelSuperior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        botaoPerfil = new JButton("Perfil");
+        painelSuperior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        // botaoPerfil = new JButton("Perfil"); // Removido
         botaoCarrinho = new JButton("Carrinho");
-        painelSuperior.add(botaoPerfil);
+        // painelSuperior.add(botaoPerfil); // Removido
         painelSuperior.add(botaoCarrinho);
         add(painelSuperior, BorderLayout.NORTH);
 
@@ -53,12 +53,13 @@ public class TelaCatalogo extends JFrame {
         JScrollPane scrollPane = new JScrollPane(painelListagemItens);
         add(scrollPane, BorderLayout.CENTER);
 
-        // ActionListener para o botão Perfil
+        // ActionListener para o botão Perfil (REMOVIDO)
+        /*
         botaoPerfil.addActionListener(e -> {
             System.out.println("Usuário logado? " + TelaCatalogo.isUsuarioLogado());
             if (TelaCatalogo.isUsuarioLogado()) {
                 telaUsuario.setLocationRelativeTo(this);
-                telaUsuario.exibirPerfilLogado(); // Chama o novo método
+                telaUsuario.exibirPerfilLogado();
             } else {
                 JOptionPane.showMessageDialog(this, "Você precisa estar logado para acessar o perfil.", "Aviso", JOptionPane.WARNING_MESSAGE);
                 if (telaLogin != null) {
@@ -67,6 +68,7 @@ public class TelaCatalogo extends JFrame {
                 }
             }
         });
+        */
 
         // Adiciona ActionListener para mostrar a TelaCarrinho
         botaoCarrinho.addActionListener(e -> {
@@ -161,6 +163,11 @@ public class TelaCatalogo extends JFrame {
     }
 
     private void mostrarOpcoesAdicionarCarrinho(Produto produto) {
+        if (!TelaCatalogo.isUsuarioLogado()) {
+            JOptionPane.showMessageDialog(this, "Você precisa estar logado para adicionar itens ao carrinho.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return; // Impede a abertura das opções de adicionar ao carrinho
+        }
+
         JPanel panel = new JPanel(new GridLayout(0, 1));
         JComboBox<Integer> quantidadeComboBox = new JComboBox<>(new Integer[]{1, 2, 3, 4, 5});
         JComboBox<String> tamanhoComboBox = new JComboBox<>();
