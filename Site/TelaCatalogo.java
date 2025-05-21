@@ -72,7 +72,7 @@ public class TelaCatalogo extends JFrame {
         setVisible(false);
     }
 
-    private void carregarProdutos() {
+    public void carregarProdutos() {
         painelListagemItens.removeAll();
         List<Produto> produtos = buscarProdutosNoBanco();
         for (Produto produto : produtos) {
