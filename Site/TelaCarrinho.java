@@ -1,122 +1,130 @@
 // TelaCarrinho.java
 package Site;
 
-import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.DefaultListModel;
-import javax.swing.border.TitledBorder;
+import javax.swing.*; // Importa classes para criar interfaces gráficas Swing
+import javax.swing.event.ListSelectionEvent; // Importa a classe para eventos de seleção em listas
+import javax.swing.event.ListSelectionListener; // Importa a interface para lidar com eventos de seleção em listas
+import java.awt.*; // Importa classes para layouts e componentes gráficos AWT
+import java.awt.event.ActionEvent; // Importa a classe para eventos de ação (como cliques de botão)
+import java.awt.event.ActionListener; // Importa a interface para lidar com eventos de ação
+import java.sql.Connection; // Importa a interface para a conexão com o banco de dados
+import java.sql.DriverManager; // Importa a classe para gerenciar drivers JDBC
+import java.sql.PreparedStatement; // Importa a classe para instruções SQL pré-compiladas
+import java.sql.ResultSet; // Importa a interface para o resultado de uma consulta SQL
+import java.sql.SQLException; // Importa a classe para exceções relacionadas ao SQL
+import java.util.ArrayList; // Importa a classe ArrayList para listas dinâmicas
+import java.util.List; // Importa a interface List para coleções ordenadas
+import javax.swing.DefaultListModel; // Importa a classe para o modelo padrão de listas Swing
+import javax.swing.border.TitledBorder; // Importa a classe para criar bordas com títulos
 
+// A classe TelaCarrinho herda de JFrame (janela principal) e implementa ActionListener (para eventos de botões) e ListSelectionListener (para seleção de itens na lista)
 public class TelaCarrinho extends JFrame implements ActionListener, ListSelectionListener {
 
-    private DefaultListModel<ItemCarrinho> carrinhoListModel;
-    private JList<ItemCarrinho> carrinhoJList;
-    private JButton removerItemButton;
-    private JButton alterarQuantidadeButton;
-    private JLabel totalLabel;
-    private JTextArea enderecoTextArea;
-    private JButton confirmarCompraButton;
-    private List<ItemCarrinho> itensCarrinho;
-    private JRadioButton pixRadioButton;
-    private JRadioButton cartaoRadioButton;
-    private ButtonGroup pagamentoGroup;
-    private String metodoPagamentoSelecionado = null;
+    private DefaultListModel<ItemCarrinho> carrinhoListModel; // Modelo da lista para gerenciar os itens no carrinho
+    private JList<ItemCarrinho> carrinhoJList; // Lista para exibir os itens do carrinho
+    private JButton removerItemButton; // Botão para remover o item selecionado do carrinho
+    private JButton alterarQuantidadeButton; // Botão para alterar a quantidade do item selecionado
+    private JLabel totalLabel; // Label para exibir o valor total do carrinho
+    private JTextArea enderecoTextArea; // Área de texto para o usuário inserir o endereço de entrega
+    private JButton confirmarCompraButton; // Botão para finalizar a compra
+    private List<ItemCarrinho> itensCarrinho; // Lista para armazenar os objetos ItemCarrinho
+    private JRadioButton pixRadioButton; // RadioButton para o método de pagamento Pix
+    private JRadioButton cartaoRadioButton; // RadioButton para o método de pagamento Cartão de Crédito
+    private ButtonGroup pagamentoGroup; // Grupo para garantir que apenas um método de pagamento seja selecionado
+    private String metodoPagamentoSelecionado = null; // Variável para armazenar o método de pagamento selecionado
 
     // Configurações do banco de dados MySQL
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "";
 
+    // Construtor da TelaCarrinho
     public TelaCarrinho() {
-        setTitle("Carrinho de Compras");
-        setSize(700, 500);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
+        setTitle("Carrinho de Compras"); // Define o título da janela
+        setSize(700, 500); // Define o tamanho inicial da janela
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Define o comportamento ao fechar a janela (apenas fecha esta tela)
+        setLocationRelativeTo(null); // Centraliza a janela na tela
+        setLayout(new BorderLayout(10, 10)); // Define o layout principal como BorderLayout com espaçamento
 
-        itensCarrinho = new ArrayList<>();
-        carrinhoListModel = new DefaultListModel<>();
-        carrinhoJList = new JList<>(carrinhoListModel);
-        carrinhoJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        carrinhoJList.addListSelectionListener(this);
-        JScrollPane carrinhoScrollPane = new JScrollPane(carrinhoJList);
-        add(carrinhoScrollPane, BorderLayout.CENTER);
+        itensCarrinho = new ArrayList<>(); // Inicializa a lista de itens do carrinho
+        carrinhoListModel = new DefaultListModel<>(); // Inicializa o modelo da lista
+        carrinhoJList = new JList<>(carrinhoListModel); // Cria a lista com o modelo
+        carrinhoJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Permite apenas uma seleção por vez
+        carrinhoJList.addListSelectionListener(this); // Adiciona um listener para detectar a seleção de itens na lista
+        JScrollPane carrinhoScrollPane = new JScrollPane(carrinhoJList); // Adiciona barra de rolagem à lista do carrinho
+        add(carrinhoScrollPane, BorderLayout.CENTER); // Adiciona a lista no centro da janela
 
+        // Painel para os botões de manipulação do carrinho (remover, alterar quantidade)
         JPanel botoesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         removerItemButton = new JButton("Remover Item");
-        removerItemButton.addActionListener(this);
-        removerItemButton.setEnabled(false);
+        removerItemButton.addActionListener(this); // Adiciona listener para o evento de clique
+        removerItemButton.setEnabled(false); // Inicialmente desabilitado, habilitado ao selecionar um item
         botoesPanel.add(removerItemButton);
 
         alterarQuantidadeButton = new JButton("Alterar Qtd.");
-        alterarQuantidadeButton.addActionListener(this);
-        alterarQuantidadeButton.setEnabled(false);
+        alterarQuantidadeButton.addActionListener(this); // Adiciona listener para o evento de clique
+        alterarQuantidadeButton.setEnabled(false); // Inicialmente desabilitado, habilitado ao selecionar um item
         botoesPanel.add(alterarQuantidadeButton);
 
-        add(botoesPanel, BorderLayout.SOUTH);
+        add(botoesPanel, BorderLayout.SOUTH); // Adiciona o painel de botões na parte sul da janela
 
+        // Painel para a seção de checkout (total, endereço, pagamento, confirmar)
         JPanel checkoutPanel = new JPanel();
-        checkoutPanel.setLayout(new BoxLayout(checkoutPanel, BoxLayout.Y_AXIS));
-        checkoutPanel.setBorder(new TitledBorder("Checkout"));
+        checkoutPanel.setLayout(new BoxLayout(checkoutPanel, BoxLayout.Y_AXIS)); // Layout vertical
+        checkoutPanel.setBorder(new TitledBorder("Checkout")); // Adiciona uma borda com título
 
-        totalLabel = new JLabel("Total: R$ 0.00");
+        totalLabel = new JLabel("Total: R$ 0.00"); // Inicializa o label do total
         checkoutPanel.add(totalLabel);
 
         checkoutPanel.add(new JLabel("Endereço de Entrega:"));
-        enderecoTextArea = new JTextArea(3, 30);
-        JScrollPane enderecoScrollPane = new JScrollPane(enderecoTextArea);
+        enderecoTextArea = new JTextArea(3, 30); // Área de texto para o endereço
+        JScrollPane enderecoScrollPane = new JScrollPane(enderecoTextArea); // Adiciona barra de rolagem
         checkoutPanel.add(enderecoScrollPane);
 
+        // Painel para os métodos de pagamento
         JPanel pagamentoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         pagamentoPanel.setBorder(new TitledBorder("Pagamento"));
         pixRadioButton = new JRadioButton("Pix");
         cartaoRadioButton = new JRadioButton("Cartão de Crédito");
-        pagamentoGroup = new ButtonGroup();
-        pagamentoGroup.add(pixRadioButton);
+        pagamentoGroup = new ButtonGroup(); // Cria um grupo para os radio buttons
+        pagamentoGroup.add(pixRadioButton); // Adiciona os radio buttons ao grupo
         pagamentoGroup.add(cartaoRadioButton);
-        pixRadioButton.addActionListener(this);
-        cartaoRadioButton.addActionListener(this);
+        pixRadioButton.addActionListener(this); // Adiciona listener para detectar a seleção
+        cartaoRadioButton.addActionListener(this); // Adiciona listener para detectar a seleção
         pagamentoPanel.add(pixRadioButton);
         pagamentoPanel.add(cartaoRadioButton);
         checkoutPanel.add(pagamentoPanel);
 
         confirmarCompraButton = new JButton("Confirmar Compra");
-        confirmarCompraButton.addActionListener(this);
+        confirmarCompraButton.addActionListener(this); // Adiciona listener para o evento de clique
         checkoutPanel.add(confirmarCompraButton);
 
-        add(checkoutPanel, BorderLayout.EAST);
+        add(checkoutPanel, BorderLayout.EAST); // Adiciona o painel de checkout na parte leste da janela
 
-        atualizarTotal();
-        setVisible(false);
+        atualizarTotal(); // Calcula e exibe o total inicial
+        setVisible(false); // A tela do carrinho começa invisível e é mostrada explicitamente
     }
 
+    // Adiciona um item ao carrinho
     public void adicionarItem(Produto produto, int quantidade, String tamanho) {
         ItemCarrinho novoItem = new ItemCarrinho(produto, quantidade, tamanho);
         itensCarrinho.add(novoItem);
         carrinhoListModel.addElement(novoItem);
-        atualizarTotal();
+        atualizarTotal(); // Recalcula o total após adicionar um item
     }
 
+    // Remove um item do carrinho pelo índice
     public void removerItem(int index) {
         if (index >= 0 && index < itensCarrinho.size()) {
             itensCarrinho.remove(index);
             carrinhoListModel.remove(index);
-            atualizarTotal();
-            removerItemButton.setEnabled(false);
+            atualizarTotal(); // Recalcula o total após remover um item
+            removerItemButton.setEnabled(false); // Desabilita os botões após a remoção ou se a lista estiver vazia
             alterarQuantidadeButton.setEnabled(false);
         }
     }
 
+    // Exibe um diálogo para o usuário inserir a nova quantidade do item selecionado
     private void mostrarDialogoAlterarQuantidade() {
         int selectedIndex = carrinhoJList.getSelectedIndex();
         if (selectedIndex != -1) {
@@ -137,14 +145,16 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         }
     }
 
+    // Atualiza a quantidade de um item no carrinho
     public void atualizarQuantidade(int index, int novaQuantidade) {
         if (index >= 0 && index < itensCarrinho.size()) {
             itensCarrinho.get(index).setQuantidade(novaQuantidade);
             carrinhoListModel.setElementAt(itensCarrinho.get(index), index);
-            atualizarTotal();
+            atualizarTotal(); // Recalcula o total após alterar a quantidade
         }
     }
 
+    // Calcula e atualiza o total do carrinho
     private void atualizarTotal() {
         double total = 0;
         for (ItemCarrinho item : itensCarrinho) {
@@ -153,6 +163,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         totalLabel.setText("Total: R$ " + String.format("%.2f", total));
     }
 
+    // Retorna o valor total do carrinho
     public double getTotal() {
         double total = 0;
         for (ItemCarrinho item : itensCarrinho) {
@@ -161,6 +172,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         return total;
     }
 
+    // Verifica se há estoque disponível para todos os itens no carrinho
     private boolean verificarEstoque() {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
             for (ItemCarrinho item : itensCarrinho) {
@@ -203,6 +215,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         }
     }
 
+    // Atualiza o estoque no banco de dados após a compra
     private void atualizarEstoqueEBanco() {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
             for (ItemCarrinho item : itensCarrinho) {
@@ -230,6 +243,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
                     }
                 }
 
+                // Verifica se o produto ficou sem estoque em todos os tamanhos e o remove do banco
                 String checkQuantidadeSql = "SELECT quantidade_p, quantidade_m, quantidade_g FROM produtos WHERE id = ?";
                 try (PreparedStatement pstmt = conn.prepareStatement(checkQuantidadeSql)) {
                     pstmt.setInt(1, produtoId);
@@ -256,6 +270,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         }
     }
 
+    // Exibe uma confirmação da compra para o usuário
     private void mostrarConfirmacaoCompra() {
         if (enderecoTextArea.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Por favor, adicione o endereço de entrega.", "Aviso", JOptionPane.WARNING_MESSAGE);
@@ -270,7 +285,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
             return;
         }
 
-        // Nova verificação de estoque antes de prosseguir
+        // Nova verificação de estoque antes de prosseguir com a compra
         if (!verificarEstoque()) {
             return; // Impede a finalização se houver problema de estoque
         }
@@ -285,24 +300,27 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
 
         int escolha = JOptionPane.showConfirmDialog(this, confirmacao.toString(), "Confirmar Compra", JOptionPane.OK_CANCEL_OPTION);
         if (escolha == JOptionPane.OK_OPTION) {
-            atualizarEstoqueEBanco();
+            atualizarEstoqueEBanco(); // Atualiza o estoque no banco
             JOptionPane.showMessageDialog(this, "Compra finalizada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            itensCarrinho.clear();
-            carrinhoListModel.clear();
-            atualizarTotal();
-            enderecoTextArea.setText("");
-            pagamentoGroup.clearSelection();
+            itensCarrinho.clear(); // Limpa o carrinho
+            carrinhoListModel.clear(); // Limpa a lista de exibição
+            atualizarTotal(); // Reseta o total
+            enderecoTextArea.setText(""); // Limpa o endereço
+            pagamentoGroup.clearSelection(); // Desseleciona o método de pagamento
             metodoPagamentoSelecionado = null;
+            // Atualiza a tela de catálogo se ela estiver visível
             if (getParent() instanceof TelaCatalogo) {
                 ((TelaCatalogo) getParent()).carregarProdutos();
             }
         }
     }
 
+    // Torna a tela do carrinho visível
     public void mostrar() {
         setVisible(true);
     }
 
+    // Lida com os eventos de ação (cliques de botão, seleções de rádio button)
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == removerItemButton) {
@@ -321,6 +339,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         }
     }
 
+    // Lida com os eventos de mudança de seleção na lista do carrinho
     @Override
     public void valueChanged(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting()) {
@@ -330,14 +349,53 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         }
     }
 
+    // Método main para executar a TelaCarrinho individualmente (para testes)
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             TelaCarrinho tela = new TelaCarrinho();
             Produto p1 = new Produto(1, 25.00, 10, 5, 2, "Camiseta Azul", "caminho/azul.jpg");
             Produto p2 = new Produto(2, 50.00, 2, 8, 3, "Calça Jeans", "caminho/jeans.jpg");
-            tela.adicionarItem(p1, 6, "M"); // Quantidade maior que o estoque (5)
+            tela.adicionarItem(p1, 1, "M");
             tela.adicionarItem(p2, 1, "G");
             tela.mostrar();
         });
+    }
+}
+
+// Classe auxiliar para representar um item no carrinho
+class ItemCarrinho {
+    private Produto produto;
+    private int quantidade;
+    private String tamanho;
+
+    public ItemCarrinho(Produto produto, int quantidade, String tamanho) {
+        this.produto = produto;
+        this.quantidade = quantidade;
+        this.tamanho = tamanho;
+    }
+
+    public Produto getProduto() {
+        return produto;
+    }
+
+    public int getQuantidade() {
+        return quantidade;
+    }
+
+    public void setQuantidade(int quantidade) {
+        this.quantidade = quantidade;
+    }
+
+    public String getTamanho() {
+        return tamanho;
+    }
+
+    public double getSubtotal() {
+        return produto.getValor() * quantidade;
+    }
+
+    @Override
+    public String toString() {
+        return produto.getDescricao() + " (Tam: " + tamanho + ", Qtd: " + quantidade + ") - R$" + String.format("%.2f", getSubtotal());
     }
 }
