@@ -65,8 +65,13 @@ public class TelaLogin extends JFrame {
                 String senha = new String(campoSenha.getPassword()); // Obtém a senha digitada
 
                 // Tenta autenticar o usuário na tabela 'usuarios'
-                if (autenticarUsuario(email, senha)) {
+                Integer usuarioId = autenticarUsuario(email, senha);
+                if (usuarioId != null) {
                     JOptionPane.showMessageDialog(TelaLogin.this, "Login de usuário bem-sucedido!");
+                    // Informa à TelaCatalogo que o usuário está logado
+                    TelaCatalogo.setUsuarioLogado(true);
+                    // Define o ID do usuário logado na TelaUsuario
+                    TelaUsuario.setUsuarioLogadoId(usuarioId);
                     SwingUtilities.invokeLater(() -> {
                         telaCatalogo.setLocationRelativeTo(TelaLogin.this); // Centraliza a tela de catálogo em relação à tela de login
                         telaCatalogo.mostrar(); // Torna a tela de catálogo visível
@@ -99,19 +104,21 @@ public class TelaLogin extends JFrame {
         return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
 
-    // Método para autenticar um usuário na tabela 'usuarios'
-    private boolean autenticarUsuario(String email, String senha) {
-        String sql = "SELECT * FROM usuarios WHERE email = ? AND senha = ?";
+    // Método para autenticar um usuário na tabela 'usuarios' e retornar o ID
+    private Integer autenticarUsuario(String email, String senha) {
+        String sql = "SELECT id FROM usuarios WHERE email = ? AND senha = ?";
         try (Connection conn = getConnection(); // Obtém a conexão com o banco
              PreparedStatement pstmt = conn.prepareStatement(sql)) { // Prepara a consulta SQL
             pstmt.setString(1, email); // Define o valor do primeiro parâmetro da consulta (email)
             pstmt.setString(2, senha); // Define o valor do segundo parâmetro da consulta (senha)
             ResultSet rs = pstmt.executeQuery(); // Executa a consulta e obtém o resultado
-            return rs.next(); // Retorna true se houver alguma linha no resultado (ou seja, o usuário existe)
+            if (rs.next()) {
+                return rs.getInt("id"); // Retorna o ID do usuário
+            }
         } catch (SQLException e) {
             System.out.println("Erro ao autenticar usuário: " + e.getMessage());
-            return false; // Retorna false em caso de erro
         }
+        return null; // Retorna null se a autenticação falhar
     }
 
     // Método para autenticar um bazar na tabela 'bazares'

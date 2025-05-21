@@ -19,6 +19,10 @@ public class TelaCatalogo extends JFrame {
     private JButton botaoCarrinho;
     private TelaLogin telaLogin; // Referência para a tela de login
     private TelaCarrinho telaCarrinho; // Instância da TelaCarrinho
+    private TelaUsuario telaUsuario; // Nova instância da TelaUsuario
+
+    // Variável estática para rastrear o estado de login
+    private static boolean usuarioEstaLogado = false;
 
     // Configurações do banco de dados MySQL
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto";
@@ -32,8 +36,9 @@ public class TelaCatalogo extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Inicializa a TelaCarrinho
+        // Inicializa a TelaCarrinho e a TelaUsuario
         telaCarrinho = new TelaCarrinho();
+        telaUsuario = new TelaUsuario();
 
         // Painel superior para ícones
         JPanel painelSuperior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -48,17 +53,18 @@ public class TelaCatalogo extends JFrame {
         JScrollPane scrollPane = new JScrollPane(painelListagemItens);
         add(scrollPane, BorderLayout.CENTER);
 
+        // ActionListener para o botão Perfil
         botaoPerfil.addActionListener(e -> {
-            boolean usuarioLogado = true; // Simulação
-            if (!usuarioLogado) {
+            System.out.println("Usuário logado? " + TelaCatalogo.isUsuarioLogado());
+            if (TelaCatalogo.isUsuarioLogado()) {
+                telaUsuario.setLocationRelativeTo(this);
+                telaUsuario.exibirPerfilLogado(); // Chama o novo método
+            } else {
+                JOptionPane.showMessageDialog(this, "Você precisa estar logado para acessar o perfil.", "Aviso", JOptionPane.WARNING_MESSAGE);
                 if (telaLogin != null) {
                     telaLogin.setLocationRelativeTo(this);
                     telaLogin.mostrar();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Você precisa estar logado para acessar o perfil.", "Aviso", JOptionPane.WARNING_MESSAGE);
                 }
-            } else {
-                JOptionPane.showMessageDialog(this, "Abrir tela de perfil (a implementar)");
             }
         });
 
@@ -70,6 +76,15 @@ public class TelaCatalogo extends JFrame {
 
         carregarProdutos();
         setVisible(false);
+    }
+
+    // Métodos estáticos para gerenciar o estado de login
+    public static void setUsuarioLogado(boolean logado) {
+        usuarioEstaLogado = logado;
+    }
+
+    public static boolean isUsuarioLogado() {
+        return usuarioEstaLogado;
     }
 
     public void carregarProdutos() {
