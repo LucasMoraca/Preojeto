@@ -10,7 +10,6 @@ public class TelaBazar extends JFrame implements ActionListener {
 
     private JButton adicionarProdutoButton;
     private JButton editarProdutoButton;
-    private JButton eliminarProdutoButton;
     private TelaAdicionarProduto telaAdicionarProduto;
     private TelaEditarProduto telaEditarProduto;
 
@@ -23,18 +22,15 @@ public class TelaBazar extends JFrame implements ActionListener {
 
         adicionarProdutoButton = new JButton("Adicionar Produto");
         editarProdutoButton = new JButton("Editar Produto");
-        eliminarProdutoButton = new JButton("Eliminar Produto");
 
         telaAdicionarProduto = new TelaAdicionarProduto();
         telaEditarProduto = new TelaEditarProduto(); // Inicializa a tela de editar produto
 
         adicionarProdutoButton.addActionListener(this);
         editarProdutoButton.addActionListener(this);
-        eliminarProdutoButton.addActionListener(this);
 
         add(adicionarProdutoButton);
         add(editarProdutoButton);
-        add(eliminarProdutoButton);
 
         setVisible(false);
     }
@@ -51,8 +47,6 @@ public class TelaBazar extends JFrame implements ActionListener {
         } else if (e.getSource() == editarProdutoButton) {
             telaEditarProduto.setLocationRelativeTo(this);
             telaEditarProduto.setVisible(true);
-        } else if (e.getSource() == eliminarProdutoButton) {
-            JOptionPane.showMessageDialog(this, "Funcionalidade de Eliminar Produto (a implementar)");
         }
     }
 
