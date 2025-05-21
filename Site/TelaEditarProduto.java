@@ -52,7 +52,7 @@ public class TelaEditarProduto extends JFrame implements ActionListener, ListSel
 
     public TelaEditarProduto() {
         setTitle("Editar Produto");
-        setSize(1000, 800); // Mantive o tamanho da janela maior
+        setSize(1250, 950); // Mantive o tamanho da janela maior
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
