@@ -18,6 +18,7 @@ public class TelaCatalogo extends JFrame {
     private JButton botaoPerfil;
     private JButton botaoCarrinho;
     private TelaLogin telaLogin; // Referência para a tela de login
+    private TelaCarrinho telaCarrinho; // Instância da TelaCarrinho
 
     // Configurações do banco de dados MySQL
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto";
@@ -30,6 +31,9 @@ public class TelaCatalogo extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
+
+        // Inicializa a TelaCarrinho
+        telaCarrinho = new TelaCarrinho();
 
         // Painel superior para ícones
         JPanel painelSuperior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -58,8 +62,10 @@ public class TelaCatalogo extends JFrame {
             }
         });
 
+        // Adiciona ActionListener para mostrar a TelaCarrinho
         botaoCarrinho.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Abrir tela do carrinho (a implementar)");
+            telaCarrinho.setLocationRelativeTo(this);
+            telaCarrinho.mostrar();
         });
 
         carregarProdutos();
@@ -166,14 +172,11 @@ public class TelaCatalogo extends JFrame {
         if (result == JOptionPane.OK_OPTION) {
             int quantidade = (Integer) quantidadeComboBox.getSelectedItem();
             String tamanho = (String) tamanhoComboBox.getSelectedItem();
+            telaCarrinho.adicionarItem(produto, quantidade, tamanho);
             JOptionPane.showMessageDialog(this,
-                    "Produto adicionado ao carrinho:\n" +
-                            "ID: " + produto.getId() + "\n" +
-                            "Quantidade: " + quantidade + "\n" +
-                            "Tamanho: " + tamanho,
+                    produto.getDescricao() + " (x" + quantidade + ", Tam: " + tamanho + ") adicionado ao carrinho.",
                     "Adicionado ao Carrinho",
                     JOptionPane.INFORMATION_MESSAGE);
-            // Aqui você implementaria a lógica para adicionar o item ao carrinho
         }
     }
 
