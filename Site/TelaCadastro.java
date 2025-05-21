@@ -24,7 +24,7 @@ public class TelaCadastro extends JFrame {
     private JPanel painelForcaSenhaCor;
     private JButton botaoCadastrarUsuario;
     private JButton botaoCadastrarBazar;
-    private TelaCatalogo telaCatalogo;
+    private TelaLogin telaLogin; // Alterado para TelaLogin
 
     // Configurações para o banco de dados MySQL
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto"; // Ajuste a URL se necessário
@@ -84,8 +84,10 @@ public class TelaCadastro extends JFrame {
         add(Box.createHorizontalStrut(10), BorderLayout.WEST);
         add(Box.createHorizontalStrut(10), BorderLayout.EAST);
 
-        // telaCatalogo inicializada aqui, será usada após o cadastro de usuário
-        telaCatalogo = new TelaCatalogo();
+        // telaLogin inicializada aqui, será usada após o cadastro de usuário
+        // Precisa receber as instâncias de TelaCatalogo e TelaBazar para criar TelaLogin corretamente
+        // Isso será feito no método setTelaLogin
+        telaLogin = null;
 
         campoSenha.getDocument().addDocumentListener(new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
@@ -126,9 +128,13 @@ public class TelaCadastro extends JFrame {
                 if (cadastrarUsuario(nomeUsuario, email, new String(senha), telefone)) {
                     JOptionPane.showMessageDialog(TelaCadastro.this, "Cadastro de Usuário realizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                     SwingUtilities.invokeLater(() -> {
-                        telaCatalogo.setLocationRelativeTo(TelaCadastro.this);
-                        telaCatalogo.mostrar();
-                        dispose();
+                        if (telaLogin != null) {
+                            telaLogin.setLocationRelativeTo(TelaCadastro.this);
+                            telaLogin.mostrar();
+                            dispose();
+                        } else {
+                            JOptionPane.showMessageDialog(TelaCadastro.this, "Erro: Tela de Login não inicializada.", "Erro", JOptionPane.ERROR_MESSAGE);
+                        }
                     });
                 } else {
                     JOptionPane.showMessageDialog(TelaCadastro.this, "Erro ao cadastrar usuário.", "Erro", JOptionPane.ERROR_MESSAGE);
@@ -266,8 +272,9 @@ public class TelaCadastro extends JFrame {
         return forca;
     }
 
-    public void setTelaCatalogo(TelaCatalogo telaCatalogo) {
-        this.telaCatalogo = telaCatalogo;
+    // Método para receber a instância de TelaLogin
+    public void setTelaLogin(TelaLogin telaLogin) {
+        this.telaLogin = telaLogin;
     }
 
     public void mostrar() {
