@@ -1,4 +1,3 @@
-// TelaCadastro.java (continuação)
 package Site;
 
 import javax.swing.*;
@@ -26,10 +25,9 @@ public class TelaCadastro extends JFrame {
     private JButton botaoCadastrarBazar;
     private TelaCatalogo telaCatalogo;
 
-    // Configurações para o banco de dados MySQL
-    private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto"; // Ajuste a URL se necessário
-    private static final String DB_USER = "root"; // Seu usuário do MySQL
-    private static final String DB_PASSWORD = ""; // Sua senha do MySQL
+    private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "";
     private static final String ADMIN_PASSWORD = "admin123";
 
     public TelaCadastro() {
@@ -38,6 +36,7 @@ public class TelaCadastro extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
+        // Painel com campos do formulário
         JPanel painelCamposUsuario = new JPanel(new GridLayout(5, 2, 10, 10));
         painelCamposUsuario.add(new JLabel("Nome:", SwingConstants.RIGHT));
         campoNomeUsuario = new JTextField();
@@ -59,6 +58,7 @@ public class TelaCadastro extends JFrame {
         campoTelefone = new JTextField();
         painelCamposUsuario.add(campoTelefone);
 
+        // Indicador de força da senha
         labelForcaSenhaTexto = new JLabel(" ");
         labelForcaSenhaTexto.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -69,6 +69,7 @@ public class TelaCadastro extends JFrame {
         painelForcaSenha.add(labelForcaSenhaTexto, BorderLayout.NORTH);
         painelForcaSenha.add(painelForcaSenhaCor, BorderLayout.SOUTH);
 
+        // Botões
         botaoCadastrarUsuario = new JButton("Cadastrar Usuário");
         botaoCadastrarBazar = new JButton("Cadastrar Bazar");
 
@@ -76,17 +77,18 @@ public class TelaCadastro extends JFrame {
         painelBotoes.add(botaoCadastrarUsuario);
         painelBotoes.add(botaoCadastrarBazar);
 
-        setLayout(new BorderLayout(10, 10));
-        add(painelForcaSenha, BorderLayout.NORTH);
-        add(painelCamposUsuario, BorderLayout.CENTER);
-        add(painelBotoes, BorderLayout.SOUTH);
-        add(Box.createVerticalStrut(10), BorderLayout.NORTH);
-        add(Box.createHorizontalStrut(10), BorderLayout.WEST);
-        add(Box.createHorizontalStrut(10), BorderLayout.EAST);
+        // Layout principal
+        JPanel painelPrincipal = new JPanel(new BorderLayout(10, 10));
+        painelPrincipal.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        painelPrincipal.add(painelForcaSenha, BorderLayout.NORTH);
+        painelPrincipal.add(painelCamposUsuario, BorderLayout.CENTER);
+        painelPrincipal.add(painelBotoes, BorderLayout.SOUTH);
 
-        // telaCatalogo inicializada aqui, será usada após o cadastro de usuário
+        setContentPane(painelPrincipal);
+
         telaCatalogo = new TelaCatalogo();
 
+        // Atualiza visual da força da senha conforme digita
         campoSenha.getDocument().addDocumentListener(new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
                 atualizarForcaSenhaVisual();
@@ -102,85 +104,89 @@ public class TelaCadastro extends JFrame {
         botaoCadastrarUsuario.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String nomeUsuario = campoNomeUsuario.getText();
-                String email = campoEmail.getText();
-                char[] senha = campoSenha.getPassword();
-                char[] confirmarSenha = campoConfirmarSenha.getPassword();
-                String telefone = campoTelefone.getText();
-
-                if (nomeUsuario.isEmpty() || email.isEmpty() || senha.length == 0 || confirmarSenha.length == 0 || telefone.isEmpty()) {
-                    JOptionPane.showMessageDialog(TelaCadastro.this, "Todos os campos devem ser preenchidos.", "Erro", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                if (!Arrays.equals(senha, confirmarSenha)) {
-                    JOptionPane.showMessageDialog(TelaCadastro.this, "As senhas não coincidem.", "Erro", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                if (isEmailCadastrado("usuarios", email)) {
-                    JOptionPane.showMessageDialog(TelaCadastro.this, "Este email já está cadastrado.", "Erro", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                if (cadastrarUsuario(nomeUsuario, email, new String(senha), telefone)) {
-                    JOptionPane.showMessageDialog(TelaCadastro.this, "Cadastro de Usuário realizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                    SwingUtilities.invokeLater(() -> {
-                        telaCatalogo.setLocationRelativeTo(TelaCadastro.this);
-                        telaCatalogo.mostrar();
-                        dispose();
-                    });
-                } else {
-                    JOptionPane.showMessageDialog(TelaCadastro.this, "Erro ao cadastrar usuário.", "Erro", JOptionPane.ERROR_MESSAGE);
-                }
+                cadastrarUsuarioHandler();
             }
         });
 
         botaoCadastrarBazar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JPasswordField passwordField = new JPasswordField();
-                int option = JOptionPane.showConfirmDialog(TelaCadastro.this, passwordField, "Digite a senha de administrador", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-                if (option == JOptionPane.OK_OPTION) {
-                    char[] adminPassword = passwordField.getPassword();
-                    if (ADMIN_PASSWORD.equals(new String(adminPassword))) {
-                        String nomeResponsavel = campoNomeUsuario.getText();
-                        String email = campoEmail.getText();
-                        char[] senha = campoSenha.getPassword();
-                        char[] confirmarSenha = campoConfirmarSenha.getPassword();
-                        String telefone = campoTelefone.getText();
-
-                        if (nomeResponsavel.isEmpty() || email.isEmpty() || senha.length == 0 || confirmarSenha.length == 0 || telefone.isEmpty()) {
-                            JOptionPane.showMessageDialog(TelaCadastro.this, "Todos os campos devem ser preenchidos para cadastrar o bazar.", "Erro", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-
-                        if (!Arrays.equals(senha, confirmarSenha)) {
-                            JOptionPane.showMessageDialog(TelaCadastro.this, "As senhas não coincidem.", "Erro", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-
-                        if (isEmailCadastrado("bazares", email)) {
-                            JOptionPane.showMessageDialog(TelaCadastro.this, "Este email já está cadastrado como bazar.", "Erro", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-
-                        if (cadastrarBazar(nomeResponsavel, email, new String(senha), telefone)) {
-                            JOptionPane.showMessageDialog(TelaCadastro.this, "Cadastro de Bazar realizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                            // Opcional: Redirecionar para outra tela ou limpar os campos
-                        } else {
-                            JOptionPane.showMessageDialog(TelaCadastro.this, "Erro ao cadastrar bazar.", "Erro", JOptionPane.ERROR_MESSAGE);
-                        }
-
-                    } else {
-                        JOptionPane.showMessageDialog(TelaCadastro.this, "Senha de administrador incorreta.", "Erro", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
+                cadastrarBazarHandler();
             }
         });
+    }
 
-        setVisible(false);
+    private void cadastrarUsuarioHandler() {
+        String nomeUsuario = campoNomeUsuario.getText().trim();
+        String email = campoEmail.getText().trim();
+        char[] senha = campoSenha.getPassword();
+        char[] confirmarSenha = campoConfirmarSenha.getPassword();
+        String telefone = campoTelefone.getText().trim();
+
+        if (nomeUsuario.isEmpty() || email.isEmpty() || senha.length == 0 || confirmarSenha.length == 0 || telefone.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Todos os campos devem ser preenchidos.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!Arrays.equals(senha, confirmarSenha)) {
+            JOptionPane.showMessageDialog(this, "As senhas não coincidem.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (isEmailCadastrado("usuarios", email)) {
+            JOptionPane.showMessageDialog(this, "Este email já está cadastrado.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (cadastrarUsuario(nomeUsuario, email, new String(senha), telefone)) {
+            JOptionPane.showMessageDialog(this, "Cadastro de Usuário realizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            telaCatalogo.setLocationRelativeTo(this);
+            telaCatalogo.mostrar();
+            dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, "Erro ao cadastrar usuário.", "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void cadastrarBazarHandler() {
+        JPasswordField passwordField = new JPasswordField();
+        int option = JOptionPane.showConfirmDialog(this, passwordField, "Digite a senha de administrador", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (option == JOptionPane.OK_OPTION) {
+            char[] adminPassword = passwordField.getPassword();
+            if (ADMIN_PASSWORD.equals(new String(adminPassword))) {
+                String nomeResponsavel = campoNomeUsuario.getText().trim();
+                String email = campoEmail.getText().trim();
+                char[] senha = campoSenha.getPassword();
+                char[] confirmarSenha = campoConfirmarSenha.getPassword();
+                String telefone = campoTelefone.getText().trim();
+
+                if (nomeResponsavel.isEmpty() || email.isEmpty() || senha.length == 0 || confirmarSenha.length == 0 || telefone.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Todos os campos devem ser preenchidos para cadastrar o bazar.", "Erro", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (!Arrays.equals(senha, confirmarSenha)) {
+                    JOptionPane.showMessageDialog(this, "As senhas não coincidem.", "Erro", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (isEmailCadastrado("bazares", email)) {
+                    JOptionPane.showMessageDialog(this, "Este email já está cadastrado como bazar.", "Erro", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (cadastrarBazar(nomeResponsavel, email, new String(senha), telefone)) {
+                    JOptionPane.showMessageDialog(this, "Cadastro de Bazar realizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                    // Limpar campos ou ações adicionais podem ser feitas aqui
+                } else {
+                    JOptionPane.showMessageDialog(this, "Erro ao cadastrar bazar.", "Erro", JOptionPane.ERROR_MESSAGE);
+                }
+
+            } else {
+                JOptionPane.showMessageDialog(this, "Senha de administrador incorreta.", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private Connection getConnection() throws SQLException {
@@ -198,7 +204,7 @@ public class TelaCadastro extends JFrame {
             int affectedRows = pstmt.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
-            System.out.println("Erro ao cadastrar usuário: " + e.getMessage());
+            System.err.println("Erro ao cadastrar usuário: " + e.getMessage());
             return false;
         }
     }
@@ -214,7 +220,7 @@ public class TelaCadastro extends JFrame {
             int affectedRows = pstmt.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
-            System.out.println("Erro ao cadastrar bazar: " + e.getMessage());
+            System.err.println("Erro ao cadastrar bazar: " + e.getMessage());
             return false;
         }
     }
@@ -224,10 +230,11 @@ public class TelaCadastro extends JFrame {
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, email);
-            ResultSet rs = pstmt.executeQuery();
-            return rs.next();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
         } catch (SQLException e) {
-            System.out.println("Erro ao verificar email: " + e.getMessage());
+            System.err.println("Erro ao verificar email: " + e.getMessage());
             return false;
         }
     }
@@ -246,7 +253,7 @@ public class TelaCadastro extends JFrame {
             corForca = Color.RED;
         } else if (forca < 60) {
             textoForca = "Média";
-            corForca = Color.YELLOW;
+            corForca = Color.ORANGE;
         } else {
             textoForca = "Forte";
             corForca = Color.GREEN;

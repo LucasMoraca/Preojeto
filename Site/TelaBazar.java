@@ -1,4 +1,3 @@
-// TelaBazar.java
 package Site;
 
 import javax.swing.*;
@@ -24,7 +23,7 @@ public class TelaBazar extends JFrame implements ActionListener {
         editarProdutoButton = new JButton("Editar Produto");
 
         telaAdicionarProduto = new TelaAdicionarProduto();
-        telaEditarProduto = new TelaEditarProduto(); // Inicializa a tela de editar produto
+        telaEditarProduto = new TelaEditarProduto();
 
         adicionarProdutoButton.addActionListener(this);
         editarProdutoButton.addActionListener(this);
@@ -46,7 +45,7 @@ public class TelaBazar extends JFrame implements ActionListener {
             telaAdicionarProduto.mostrar();
         } else if (e.getSource() == editarProdutoButton) {
             telaEditarProduto.setLocationRelativeTo(this);
-            telaEditarProduto.setVisible(true);
+            telaEditarProduto.mostrar();
         }
     }
 

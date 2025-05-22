@@ -1,4 +1,3 @@
-// ItemCarrinho.java
 package Site;
 
 public class ItemCarrinho {
@@ -25,11 +24,28 @@ public class ItemCarrinho {
     }
 
     public void setQuantidade(int quantidade) {
+        if (quantidade < 0) {
+            throw new IllegalArgumentException("Quantidade não pode ser negativa");
+        }
         this.quantidade = quantidade;
     }
 
     public double getSubtotal() {
         return produto.getValor() * quantidade;
+    }
+
+    // Poderia adicionar método para atualizar quantidade (incrementar/decrementar)
+    public void incrementarQuantidade(int valor) {
+        if (valor < 0) throw new IllegalArgumentException("Valor deve ser positivo");
+        this.quantidade += valor;
+    }
+
+    public void decrementarQuantidade(int valor) {
+        if (valor < 0) throw new IllegalArgumentException("Valor deve ser positivo");
+        if (this.quantidade - valor < 0) {
+            throw new IllegalArgumentException("Quantidade não pode ficar negativa");
+        }
+        this.quantidade -= valor;
     }
 
     @Override

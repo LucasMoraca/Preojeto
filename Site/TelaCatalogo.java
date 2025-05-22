@@ -4,11 +4,7 @@ package Site;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,15 +12,11 @@ public class TelaCatalogo extends JFrame {
 
     private JPanel painelListagemItens;
     private JButton botaoCarrinho;
-    private TelaLogin telaLogin; // Referência para a tela de login
-    private TelaCarrinho telaCarrinho; // Instância da TelaCarrinho
-    // private TelaUsuario telaUsuario; // Removido
-    private JPanel painelSuperior; // Para o botão de carrinho
+    private TelaCarrinho telaCarrinho;
 
-    // Variável estática para rastrear o estado de login
     private static boolean usuarioEstaLogado = false;
 
-    // Configurações do banco de dados MySQL (poderiam ser externalizadas em um arquivo de configuração)
+    // Configurações do banco
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "";
@@ -36,15 +28,10 @@ public class TelaCatalogo extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Inicializa a TelaCarrinho
         telaCarrinho = new TelaCarrinho();
-        // telaUsuario = new TelaUsuario(); // Removido
 
-        // Painel superior para ícones
-        painelSuperior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        // botaoPerfil = new JButton("Perfil"); // Removido
+        JPanel painelSuperior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         botaoCarrinho = new JButton("Carrinho");
-        // painelSuperior.add(botaoPerfil); // Removido
         painelSuperior.add(botaoCarrinho);
         add(painelSuperior, BorderLayout.NORTH);
 
@@ -53,17 +40,15 @@ public class TelaCatalogo extends JFrame {
         JScrollPane scrollPane = new JScrollPane(painelListagemItens);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Adiciona ActionListener para mostrar a TelaCarrinho ao clicar no botão
         botaoCarrinho.addActionListener(e -> {
             telaCarrinho.setLocationRelativeTo(this);
             telaCarrinho.mostrar();
         });
 
         carregarProdutos();
-        setVisible(false);
+        setVisible(true);
     }
 
-    // Métodos estáticos para gerenciar o estado de login
     public static void setUsuarioLogado(boolean logado) {
         usuarioEstaLogado = logado;
     }
@@ -72,49 +57,25 @@ public class TelaCatalogo extends JFrame {
         return usuarioEstaLogado;
     }
 
-    public void carregarProdutos() {
+    private void carregarProdutos() {
         painelListagemItens.removeAll();
-        List<Produto> produtos = buscarProdutosNoBanco();
+        List<Produto> produtos = ProdutoDAO.listarProdutos();
+
         for (Produto produto : produtos) {
             JPanel produtoPanel = criarPainelProduto(produto);
             painelListagemItens.add(produtoPanel);
         }
+
         painelListagemItens.revalidate();
         painelListagemItens.repaint();
-    }
-
-    private List<Produto> buscarProdutosNoBanco() {
-        List<Produto> produtos = new ArrayList<>();
-        String sql = "SELECT id, valor, quantidade_p, quantidade_m, quantidade_g, descricao, imagem1_path FROM produtos";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-            while (rs.next()) {
-                Produto produto = new Produto(
-                        rs.getInt("id"),
-                        rs.getDouble("valor"),
-                        rs.getInt("quantidade_p"),
-                        rs.getInt("quantidade_m"),
-                        rs.getInt("quantidade_g"),
-                        rs.getString("descricao"),
-                        rs.getString("imagem1_path")
-                );
-                produtos.add(produto);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar produtos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
-        return produtos;
     }
 
     private JPanel criarPainelProduto(Produto produto) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        panel.setPreferredSize(new Dimension(200, 250)); // Tamanho base para cada item
+        panel.setPreferredSize(new Dimension(200, 250));
 
-        // Exibir imagem (se houver caminho)
         if (produto.getImagem1Path() != null && !produto.getImagem1Path().isEmpty()) {
             ImageIcon imageIcon = new ImageIcon(produto.getImagem1Path());
             Image image = imageIcon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
@@ -128,9 +89,8 @@ public class TelaCatalogo extends JFrame {
             panel.add(Box.createVerticalStrut(5));
         }
 
-        // Exibir descrição do produto (truncada se for muito longa)
-        String descricao = produto.getDescricao();
-        JLabel descricaoLabel = new JLabel("Descrição: " + (descricao.length() > 50 ? descricao.substring(0, 50) + "..." : descricao));
+        JLabel descricaoLabel = new JLabel("Descrição: " + (produto.getDescricao().length() > 50 ?
+                produto.getDescricao().substring(0, 50) + "..." : produto.getDescricao()));
         descricaoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(descricaoLabel);
 
@@ -148,9 +108,9 @@ public class TelaCatalogo extends JFrame {
     }
 
     private void mostrarOpcoesAdicionarCarrinho(Produto produto) {
-        if (!TelaCatalogo.isUsuarioLogado()) {
+        if (!isUsuarioLogado()) {
             JOptionPane.showMessageDialog(this, "Você precisa estar logado para adicionar itens ao carrinho.", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return; // Impede a abertura das opções de adicionar ao carrinho
+            return;
         }
 
         JPanel panel = new JPanel(new GridLayout(0, 1));
@@ -160,7 +120,7 @@ public class TelaCatalogo extends JFrame {
         if (produto.getQuantidadeM() > 0) tamanhoComboBox.addItem("M");
         if (produto.getQuantidadeG() > 0) tamanhoComboBox.addItem("G");
         if (tamanhoComboBox.getItemCount() == 0) {
-            tamanhoComboBox.addItem("Único"); // Caso não haja tamanhos definidos
+            tamanhoComboBox.addItem("Único");
             tamanhoComboBox.setEnabled(false);
         }
 
@@ -169,12 +129,8 @@ public class TelaCatalogo extends JFrame {
         panel.add(new JLabel("Tamanho:"));
         panel.add(tamanhoComboBox);
 
-        int result = JOptionPane.showConfirmDialog(
-                this,
-                panel,
-                "Escolher Quantidade e Tamanho",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(this, panel,
+                "Escolher Quantidade e Tamanho", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.OK_OPTION) {
             int quantidade = (Integer) quantidadeComboBox.getSelectedItem();
@@ -187,66 +143,103 @@ public class TelaCatalogo extends JFrame {
         }
     }
 
-    // Método para receber a instância de TelaLogin
-    public void setTelaLogin(TelaLogin telaLogin) {
-        this.telaLogin = telaLogin;
+    // *** CLASSE PRODUTO ***
+    static class Produto {
+        private int id;
+        private double valor;
+        private int quantidadeP;
+        private int quantidadeM;
+        private int quantidadeG;
+        private String descricao;
+        private String imagem1Path;
+
+        public Produto(int id, double valor, int quantidadeP, int quantidadeM, int quantidadeG, String descricao, String imagem1Path) {
+            this.id = id;
+            this.valor = valor;
+            this.quantidadeP = quantidadeP;
+            this.quantidadeM = quantidadeM;
+            this.quantidadeG = quantidadeG;
+            this.descricao = descricao;
+            this.imagem1Path = imagem1Path;
+        }
+
+        public int getId() { return id; }
+        public double getValor() { return valor; }
+        public int getQuantidadeP() { return quantidadeP; }
+        public int getQuantidadeM() { return quantidadeM; }
+        public int getQuantidadeG() { return quantidadeG; }
+        public String getDescricao() { return descricao; }
+        public String getImagem1Path() { return imagem1Path; }
     }
 
-    public void mostrar() {
-        setVisible(true);
+    // *** DAO para PRODUTOS ***
+    static class ProdutoDAO {
+        public static List<Produto> listarProdutos() {
+            List<Produto> produtos = new ArrayList<>();
+            String sql = "SELECT id, valor, quantidade_p, quantidade_m, quantidade_g, descricao, imagem1_path FROM produtos";
+
+            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+                 PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+
+                while (rs.next()) {
+                    Produto produto = new Produto(
+                            rs.getInt("id"),
+                            rs.getDouble("valor"),
+                            rs.getInt("quantidade_p"),
+                            rs.getInt("quantidade_m"),
+                            rs.getInt("quantidade_g"),
+                            rs.getString("descricao"),
+                            rs.getString("imagem1_path")
+                    );
+                    produtos.add(produto);
+                }
+
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Erro ao carregar produtos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+
+            return produtos;
+        }
     }
 
+    // *** TelaCarrinho simplificada ***
+    static class TelaCarrinho extends JFrame {
+        private DefaultListModel<String> itensModel;
+        private JList<String> listaItens;
+
+        public TelaCarrinho() {
+            setTitle("Carrinho");
+            setSize(400, 300);
+            setLocationRelativeTo(null);
+            setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+
+            itensModel = new DefaultListModel<>();
+            listaItens = new JList<>(itensModel);
+
+            add(new JScrollPane(listaItens), BorderLayout.CENTER);
+        }
+
+        public void adicionarItem(Produto produto, int quantidade, String tamanho) {
+            String item = produto.getDescricao() + " - Qtde: " + quantidade + " - Tam: " + tamanho + " - R$" + String.format("%.2f", produto.getValor() * quantidade);
+            itensModel.addElement(item);
+        }
+
+        public void mostrar() {
+            setVisible(true);
+        }
+    }
+
+    // Main
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new TelaCatalogo().mostrar());
-    }
-}
+        // Para evitar erro com driver JDBC, registrar explicitamente
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
-// Classe auxiliar para representar um Produto
-class Produto {
-    private int id;
-    private double valor;
-    private int quantidadeP;
-    private int quantidadeM;
-    private int quantidadeG;
-    private String descricao;
-    private String imagem1Path;
-
-    public Produto(int id, double valor, int quantidadeP, int quantidadeM, int quantidadeG, String descricao, String imagem1Path) {
-        this.id = id;
-        this.valor = valor;
-        this.quantidadeP = quantidadeP;
-        this.quantidadeM = quantidadeM;
-        this.quantidadeG = quantidadeG;
-        this.descricao = descricao;
-        this.imagem1Path = imagem1Path;
-    }
-
-    // Getters
-    public int getId() {
-        return id;
-    }
-
-    public double getValor() {
-        return valor;
-    }
-
-    public int getQuantidadeP() {
-        return quantidadeP;
-    }
-
-    public int getQuantidadeM() {
-        return quantidadeM;
-    }
-
-    public int getQuantidadeG() {
-        return quantidadeG;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public String getImagem1Path() {
-        return imagem1Path;
+        SwingUtilities.invokeLater(TelaCatalogo::new);
     }
 }

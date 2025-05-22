@@ -1,276 +1,179 @@
-// TelaCarrinho.java
-package Site;
-
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.MatteBorder;
+import javax.swing.event.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.text.DecimalFormat;
+import java.awt.event.*;
+import java.sql.*;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.DefaultListModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import java.util.Locale;
 
 public class TelaCarrinho extends JFrame implements ActionListener, ListSelectionListener {
 
+    private List<ItemCarrinho> itensCarrinho;
     private JPanel cartItemsPanel;
     private JLabel totalLabel;
-    private DecimalFormat currencyFormat = new DecimalFormat("R$ #,##0.00");
-    private double currentTotal = 0.0;
+    private double currentTotal;
+    private NumberFormat currencyFormat;
     private JTextArea enderecoTextArea;
-    private JButton confirmarCompraButton;
-    private JRadioButton pixRadioButton;
-    private JRadioButton cartaoRadioButton;
     private ButtonGroup pagamentoGroup;
-    private String metodoPagamentoSelecionado = null;
-    private List<ItemCarrinho> itensCarrinho = new ArrayList<>();
+    private JRadioButton pixRadioButton, cartaoRadioButton;
+    private JButton confirmarCompraButton;
+    private String metodoPagamentoSelecionado;
 
-    private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "";
+    // Dados do banco (configure corretamente)
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/seu_banco";
+    private static final String DB_USER = "usuario";
+    private static final String DB_PASSWORD = "senha";
 
     public TelaCarrinho() {
-        setTitle("Carrinho de Compras");
-        setSize(950, 700); // Aumentei um pouco a largura
+        super("Carrinho de Compras");
+
+        itensCarrinho = new ArrayList<>();
+        currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(600, 600);
         setLocationRelativeTo(null);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        mainPanel.add(createTopBar(), BorderLayout.NORTH);
-        mainPanel.add(createCenterContainer(), BorderLayout.CENTER);
-        mainPanel.add(createFooter(), BorderLayout.SOUTH);
+        setLayout(new BorderLayout());
 
-        add(mainPanel);
-        setVisible(false);
-    }
-
-    private JPanel createTopBar() {
-        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JLabel title = new JLabel("MEU CARRINHO");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        topBar.add(title);
-        return topBar;
-    }
-
-    private JPanel createCenterContainer() {
-        JPanel center = new JPanel(new BorderLayout());
-        center.add(createOrderDetailsPanel(), BorderLayout.EAST); // Moveu para a direita
-        center.add(createCartItemsScrollPane(), BorderLayout.CENTER); // Painel de itens no centro
-        return center;
-    }
-
-    private JScrollPane createCartItemsScrollPane() {
         cartItemsPanel = new JPanel();
         cartItemsPanel.setLayout(new BoxLayout(cartItemsPanel, BoxLayout.Y_AXIS));
-        cartItemsPanel.setBackground(new Color(240, 240, 240));
-        cartItemsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Adicionei margem lateral
+        JScrollPane scrollPane = new JScrollPane(cartItemsPanel);
+        add(scrollPane, BorderLayout.CENTER);
 
-        JScrollPane scroll = new JScrollPane(cartItemsPanel);
-        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
-        return scroll;
-    }
+        JPanel bottomPanel = new JPanel(new BorderLayout());
 
-    private JPanel createOrderDetailsPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder("Entrega e Pagamento"));
-        panel.setPreferredSize(new Dimension(300, 200)); // Largura fixa para a lateral
-        panel.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));
-        panel.setAlignmentY(Component.TOP_ALIGNMENT);
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        totalLabel = new JLabel("Total do Carrinho: " + currencyFormat.format(0));
+        bottomPanel.add(totalLabel, BorderLayout.NORTH);
 
-        panel.add(new JLabel("Endereço de Entrega:"));
-        enderecoTextArea = new JTextArea(3, 25);
-        JScrollPane enderecoScrollPane = new JScrollPane(enderecoTextArea);
-        panel.add(enderecoScrollPane);
-        panel.add(Box.createVerticalStrut(10)); // Espaçamento
+        JPanel enderecoPanel = new JPanel(new BorderLayout());
+        enderecoPanel.setBorder(BorderFactory.createTitledBorder("Endereço de Entrega"));
+        enderecoTextArea = new JTextArea(3, 40);
+        enderecoTextArea.setLineWrap(true);
+        enderecoTextArea.setWrapStyleWord(true);
+        enderecoPanel.add(new JScrollPane(enderecoTextArea), BorderLayout.CENTER);
+        bottomPanel.add(enderecoPanel, BorderLayout.CENTER);
 
         JPanel pagamentoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pagamentoPanel.setBorder(BorderFactory.createTitledBorder("Pagamento"));
+        pagamentoPanel.setBorder(BorderFactory.createTitledBorder("Método de Pagamento"));
         pixRadioButton = new JRadioButton("Pix");
         cartaoRadioButton = new JRadioButton("Cartão de Crédito");
         pagamentoGroup = new ButtonGroup();
         pagamentoGroup.add(pixRadioButton);
         pagamentoGroup.add(cartaoRadioButton);
-        pixRadioButton.addActionListener(this);
-        cartaoRadioButton.addActionListener(this);
         pagamentoPanel.add(pixRadioButton);
         pagamentoPanel.add(cartaoRadioButton);
-        panel.add(pagamentoPanel);
-        panel.add(Box.createVerticalGlue()); // Empurra para cima
+        bottomPanel.add(pagamentoPanel, BorderLayout.SOUTH);
 
-        return panel;
-    }
+        add(bottomPanel, BorderLayout.SOUTH);
 
-    private JPanel createFooter() {
-        JPanel footer = new JPanel(new BorderLayout());
-        footer.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        confirmarCompraButton = new JButton("Finalizar Pedido");
+        confirmarCompraButton = new JButton("Confirmar Compra");
         confirmarCompraButton.addActionListener(this);
-        footer.add(confirmarCompraButton, BorderLayout.EAST);
+        add(confirmarCompraButton, BorderLayout.NORTH);
 
-        totalLabel = new JLabel("Total do Carrinho: " + currencyFormat.format(currentTotal), SwingConstants.LEFT);
-        totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        footer.add(totalLabel, BorderLayout.WEST);
-
-        return footer;
+        pixRadioButton.addActionListener(this);
+        cartaoRadioButton.addActionListener(this);
     }
 
+    // Método para carregar produtos do banco
+    public List<Produto> carregarProdutosDoBanco() {
+        List<Produto> produtos = new ArrayList<>();
+        String sql = "SELECT id, valor, quantidade_p, quantidade_m, quantidade_g, descricao, imagemPath FROM produtos";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Produto p = new Produto(
+                        rs.getInt("id"),
+                        rs.getDouble("valor"),
+                        rs.getInt("quantidade_p"),
+                        rs.getInt("quantidade_m"),
+                        rs.getInt("quantidade_g"),
+                        rs.getString("descricao"),
+                        rs.getString("imagemPath")
+                );
+                produtos.add(p);
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar produtos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+        return produtos;
+    }
+
+    // Adiciona item no carrinho (como antes)
     public void adicionarItem(Produto produto, int quantidade, String tamanho) {
+        for (ItemCarrinho item : itensCarrinho) {
+            if (item.getProduto().getId() == produto.getId() && item.getTamanho().equals(tamanho)) {
+                item.setQuantidade(item.getQuantidade() + quantidade);
+                atualizarExibicaoCarrinho();
+                return;
+            }
+        }
         ItemCarrinho novoItem = new ItemCarrinho(produto, quantidade, tamanho);
         itensCarrinho.add(novoItem);
-        addCartItemToPanel(novoItem);
-        atualizarTotal();
+        atualizarExibicaoCarrinho();
     }
 
     private void addCartItemToPanel(ItemCarrinho item) {
-        JPanel itemPanel = new JPanel(new GridBagLayout());
-        itemPanel.setBackground(Color.WHITE);
-        itemPanel.setBorder(BorderFactory.createCompoundBorder(
-                new MatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY),
-                new EmptyBorder(5, 5, 5, 5))); // Reduzi a margem interna
+        JPanel itemPanel = new JPanel(new BorderLayout());
+        JLabel descricaoLabel = new JLabel(item.toString());
+        itemPanel.add(descricaoLabel, BorderLayout.CENTER);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(2, 2, 2, 2); // Reduzi as insets
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton removerButton = new JButton("Remover");
+        removerButton.addActionListener(e -> {
+            removerItem(itensCarrinho.indexOf(item));
+        });
+        buttonsPanel.add(removerButton);
 
-        JLabel descricaoLabel = new JLabel(item.getProduto().getDescricao());
-        descricaoLabel.setFont(descricaoLabel.getFont().deriveFont(Font.PLAIN, 12)); // Diminui a fonte
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0.7;
-        gbc.anchor = GridBagConstraints.WEST;
-        itemPanel.add(descricaoLabel, gbc);
-
-        JLabel tamanhoLabel = new JLabel("Tam: " + item.getTamanho());
-        tamanhoLabel.setFont(tamanhoLabel.getFont().deriveFont(Font.PLAIN, 10)); // Diminui a fonte
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        itemPanel.add(tamanhoLabel, gbc);
-
-        // --- Controles de Quantidade ---
-        JPanel quantityPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        quantityPanel.setBackground(Color.WHITE);
-        JButton minusButton = new JButton("-");
-        JLabel quantityLabel = new JLabel(String.valueOf(item.getQuantidade()));
-        JButton plusButton = new JButton("+");
-        minusButton.setFont(minusButton.getFont().deriveFont(Font.PLAIN, 10));
-        quantityLabel.setFont(quantityLabel.getFont().deriveFont(Font.PLAIN, 10));
-        plusButton.setFont(plusButton.getFont().deriveFont(Font.PLAIN, 10));
-        quantityPanel.add(new JLabel("Qtd: "));
-        quantityPanel.add(minusButton);
-        quantityPanel.add(quantityLabel);
-        quantityPanel.add(plusButton);
-
-        final ItemCarrinho finalItem = item;
-        final JLabel finalQuantityLabel = quantityLabel;
-        final JPanel finalItemPanel = itemPanel;
-
-        minusButton.addActionListener(e -> {
-            int currentQuantity = Integer.parseInt(finalQuantityLabel.getText());
-            if (currentQuantity > 1) {
-                finalItem.setQuantidade(currentQuantity - 1);
-                finalQuantityLabel.setText(String.valueOf(finalItem.getQuantidade()));
-                updateItemTotalPrice(finalItemPanel, finalItem);
-                atualizarTotal();
-            } else if (currentQuantity == 1) {
-                int resposta = JOptionPane.showConfirmDialog(this, "Remover " + finalItem.getProduto().getDescricao() + "?", "Remover Item", JOptionPane.YES_NO_OPTION);
-                if (resposta == JOptionPane.YES_OPTION) {
-                    removerItem(itensCarrinho.indexOf(finalItem));
+        JTextField quantidadeField = new JTextField(String.valueOf(item.getQuantidade()), 3);
+        quantidadeField.addActionListener(e -> {
+            try {
+                int novaQtd = Integer.parseInt(quantidadeField.getText());
+                if (novaQtd <= 0) {
+                    JOptionPane.showMessageDialog(this, "Quantidade deve ser maior que zero.", "Aviso", JOptionPane.WARNING_MESSAGE);
+                    quantidadeField.setText(String.valueOf(item.getQuantidade()));
+                    return;
                 }
+                item.setQuantidade(novaQtd);
+                updateItemTotalPrice(itemPanel, item);
+                atualizarTotal();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Quantidade inválida.", "Erro", JOptionPane.ERROR_MESSAGE);
+                quantidadeField.setText(String.valueOf(item.getQuantidade()));
             }
         });
+        buttonsPanel.add(new JLabel("Qtd: "));
+        buttonsPanel.add(quantidadeField);
 
-        plusButton.addActionListener(e -> {
-            int currentQuantity = Integer.parseInt(finalQuantityLabel.getText());
-            finalItem.setQuantidade(currentQuantity + 1);
-            finalQuantityLabel.setText(String.valueOf(finalItem.getQuantidade()));
-            updateItemTotalPrice(finalItemPanel, finalItem);
-            atualizarTotal();
-        });
+        JLabel totalItemLabel = new JLabel(" | Total: " + currencyFormat.format(item.getSubtotal()));
+        buttonsPanel.add(totalItemLabel);
 
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        gbc.weightx = 0.2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        itemPanel.add(quantityPanel, gbc);
-        // --- Fim Controles de Quantidade ---
-
-        // --- Preço do Item ---
-        JPanel prices = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        prices.setBackground(Color.WHITE);
-        JLabel itemPriceLabel = new JLabel(currencyFormat.format(item.getProduto().getValor()));
-        JLabel itemTotalPriceLabel = new JLabel("Total: " + currencyFormat.format(item.getSubtotal()));
-        itemPriceLabel.setFont(itemPriceLabel.getFont().deriveFont(Font.PLAIN, 10));
-        itemTotalPriceLabel.setFont(itemTotalPriceLabel.getFont().deriveFont(Font.PLAIN, 10));
-        JLabel precoUnitLabel = new JLabel("Preço Unitário: ");
-        precoUnitLabel.setFont(precoUnitLabel.getFont().deriveFont(Font.PLAIN, 10));
-        JLabel totalItemLabel = new JLabel(" | Total: ");
-        totalItemLabel.setFont(totalItemLabel.getFont().deriveFont(Font.PLAIN, 10));
-
-        prices.add(precoUnitLabel);
-        prices.add(itemPriceLabel);
-        prices.add(totalItemLabel);
-        prices.add(itemTotalPriceLabel);
-
-        gbc.gridx = 2;
-        gbc.gridy = 0;
-        gbc.weightx = 0.2;
-        gbc.anchor = GridBagConstraints.EAST;
-        itemPanel.add(prices, gbc);
-        // --- Fim Preço do Item ---
-
-        // --- Botão Remover ---
-        JButton removerButton = new JButton("Remover");
-        removerButton.setFont(removerButton.getFont().deriveFont(Font.PLAIN, 10));
-        removerButton.addActionListener(e -> removerItem(itensCarrinho.indexOf(finalItem)));
-        gbc.gridx = 3;
-        gbc.gridy = 0;
-        gbc.weightx = 0.1;
-        gbc.anchor = GridBagConstraints.EAST;
-        itemPanel.add(removerButton, gbc);
-        gbc.gridy = 1;
-        itemPanel.add(new JPanel(), gbc); // Espaçador
+        itemPanel.add(buttonsPanel, BorderLayout.EAST);
 
         cartItemsPanel.add(itemPanel);
-        cartItemsPanel.revalidate();
-        cartItemsPanel.repaint();
-        atualizarTotal();
     }
 
     private void updateItemTotalPrice(JPanel itemPanel, ItemCarrinho item) {
         Component[] components = itemPanel.getComponents();
         for (Component comp : components) {
-            if (comp instanceof JPanel && ((JPanel) comp).getLayout() instanceof FlowLayout && ((FlowLayout) ((JPanel) comp).getLayout()).getAlignment() == FlowLayout.RIGHT) {
-                JPanel pricePanel = (JPanel) comp;
-                Component[] priceComponents = pricePanel.getComponents();
-                JLabel totalPriceLabelToUpdate = null;
-                for (Component priceComp : priceComponents) {
-                    if (priceComp instanceof JLabel && ((JLabel) priceComp).getText().startsWith("Total:")) {
-                        // Encontra o label correto (pode haver outros JLabels no painel de preços)
-                        int index = java.util.Arrays.asList(priceComponents).indexOf(priceComp);
-                        if (index > 0 && priceComponents[index - 1] instanceof JLabel && ((JLabel) priceComponents[index - 1]).getText().equals(" | Total: ")) {
-                            totalPriceLabelToUpdate = (JLabel) priceComp;
+            if (comp instanceof JPanel) {
+                JPanel buttonsPanel = (JPanel) comp;
+                for (Component innerComp : buttonsPanel.getComponents()) {
+                    if (innerComp instanceof JLabel) {
+                        JLabel label = (JLabel) innerComp;
+                        if (label.getText().startsWith(" | Total:")) {
+                            label.setText(" | Total: " + currencyFormat.format(item.getSubtotal()));
                             break;
                         }
                     }
                 }
-                if (totalPriceLabelToUpdate != null) {
-                    totalPriceLabelToUpdate.setText(currencyFormat.format(item.getSubtotal()));
-                }
-                break;
             }
         }
     }
@@ -308,14 +211,21 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
                     ResultSet rs = pstmt.executeQuery();
                     if (rs.next()) {
                         int estoque = 0;
-                        if (tamanho.equals("P")) {
-                            estoque = rs.getInt("quantidade_p");
-                        } else if (tamanho.equals("M")) {
-                            estoque = rs.getInt("quantidade_m");
-                        } else if (tamanho.equals("G")) {
-                            estoque = rs.getInt("quantidade_g");
-                        } else if (tamanho.equals("Único")) {
-                            estoque = rs.getInt("quantidade_p");
+                        switch (tamanho) {
+                            case "P":
+                                estoque = rs.getInt("quantidade_p");
+                                break;
+                            case "M":
+                                estoque = rs.getInt("quantidade_m");
+                                break;
+                            case "G":
+                                estoque = rs.getInt("quantidade_g");
+                                break;
+                            case "Único":
+                                estoque = rs.getInt("quantidade_p");
+                                break;
+                            default:
+                                estoque = 0;
                         }
 
                         if (quantidadeComprada > estoque) {
@@ -345,15 +255,19 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
                 int produtoId = produto.getId();
 
                 String updateSql = "";
-                if (tamanho.equals("P")) {
-                    updateSql = "UPDATE produtos SET quantidade_p = quantidade_p - ? WHERE id = ?";
-                } else if (tamanho.equals("M")) {
-                    updateSql = "UPDATE produtos SET quantidade_m = quantidade_m - ? WHERE id = ?";
-                } else if (tamanho.equals("G")) {
-                    updateSql = "UPDATE produtos SET quantidade_g = quantidade_g - ? WHERE id = ?";
-                } else if (tamanho.equals("Único")) {
-                    // TelaCarrinho.java (continuação)
-                    updateSql = "UPDATE produtos SET quantidade_p = quantidade_p - ? WHERE id = ?";
+                switch (tamanho) {
+                    case "P":
+                        updateSql = "UPDATE produtos SET quantidade_p = quantidade_p - ? WHERE id = ?";
+                        break;
+                    case "M":
+                        updateSql = "UPDATE produtos SET quantidade_m = quantidade_m - ? WHERE id = ?";
+                        break;
+                    case "G":
+                        updateSql = "UPDATE produtos SET quantidade_g = quantidade_g - ? WHERE id = ?";
+                        break;
+                    case "Único":
+                        updateSql = "UPDATE produtos SET quantidade_p = quantidade_p - ? WHERE id = ?";
+                        break;
                 }
 
                 if (!updateSql.isEmpty()) {
@@ -404,7 +318,6 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
             return;
         }
 
-        // Nova verificação de estoque antes de prosseguir
         if (!verificarEstoque()) {
             return;
         }
@@ -425,6 +338,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
             enderecoTextArea.setText("");
             pagamentoGroup.clearSelection();
             metodoPagamentoSelecionado = null;
+
             if (getParent() instanceof TelaCatalogo) {
                 ((TelaCatalogo) getParent()).carregarProdutos();
             }
@@ -448,71 +362,42 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == confirmarCompraButton) {
+        Object source = e.getSource();
+        if (source == confirmarCompraButton) {
             mostrarConfirmacaoCompra();
-        } else if (e.getSource() == pixRadioButton) {
+        } else if (source == pixRadioButton) {
             metodoPagamentoSelecionado = "Pix";
-        } else if (e.getSource() == cartaoRadioButton) {
+        } else if (source == cartaoRadioButton) {
             metodoPagamentoSelecionado = "Cartão de Crédito";
         }
     }
 
     @Override
     public void valueChanged(ListSelectionEvent e) {
-        // Não estamos usando a JList diretamente para seleção neste layout.
+        // Não usado
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             TelaCarrinho tela = new TelaCarrinho();
-            Produto p1 = new Produto(1, 25.00, 10, 5, 2, "Camiseta Azul", "caminho/azul.jpg");
-            Produto p2 = new Produto(2, 50.00, 2, 8, 3, "Calça Jeans", "caminho/jeans.jpg");
-            tela.adicionarItem(p1, 1, "M");
-            tela.adicionarItem(p2, 1, "G");
+
+            // Exemplo: carrega produtos do banco e adiciona ao carrinho para testes
+            List<Produto> produtosDoBanco = tela.carregarProdutosDoBanco();
+            if (!produtosDoBanco.isEmpty()) {
+                // Adiciona o primeiro produto tamanho P com quantidade 2
+                tela.adicionarItem(produtosDoBanco.get(0), 2, "P");
+
+                // Se tiver mais produtos, adiciona outro item
+                if (produtosDoBanco.size() > 1) {
+                    tela.adicionarItem(produtosDoBanco.get(1), 1, "M");
+                }
+            }
+
             tela.mostrar();
         });
     }
 }
 
-// Classe auxiliar para representar um item no carrinho
-class ItemCarrinho {
-    private Produto produto;
-    private int quantidade;
-    private String tamanho;
-
-    public ItemCarrinho(Produto produto, int quantidade, String tamanho) {
-        this.produto = produto;
-        this.quantidade = quantidade;
-        this.tamanho = tamanho;
-    }
-
-    public Produto getProduto() {
-        return produto;
-    }
-
-    public int getQuantidade() {
-        return quantidade;
-    }
-
-    public void setQuantidade(int quantidade) {
-        this.quantidade = quantidade;
-    }
-
-    public String getTamanho() {
-        return tamanho;
-    }
-
-    public double getSubtotal() {
-        return produto.getValor() * quantidade;
-    }
-
-    @Override
-    public String toString() {
-        return produto.getDescricao() + " (Tam: " + tamanho + ", Qtd: " + quantidade + ") - " + String.format("R$ %.2f", getSubtotal());
-    }
-}
-
-// Classe auxiliar Produto (apenas para exemplo)
 class Produto {
     private int id;
     private double valor;
@@ -532,27 +417,38 @@ class Produto {
         this.imagemPath = imagemPath;
     }
 
-    public int getId() {
-        return id;
+    public int getId() { return id; }
+    public double getValor() { return valor; }
+    public int getQuantidadeP() { return quantidade_p; }
+    public int getQuantidadeM() { return quantidade_m; }
+    public int getQuantidadeG() { return quantidade_g; }
+    public String getDescricao() { return descricao; }
+    public String getImagemPath() { return imagemPath; }
+}
+
+class ItemCarrinho {
+    private Produto produto;
+    private int quantidade;
+    private String tamanho;
+
+    public ItemCarrinho(Produto produto, int quantidade, String tamanho) {
+        this.produto = produto;
+        this.quantidade = quantidade;
+        this.tamanho = tamanho;
     }
 
-    public double getValor() {
-        return valor;
+    public Produto getProduto() { return produto; }
+    public int getQuantidade() { return quantidade; }
+    public void setQuantidade(int quantidade) { this.quantidade = quantidade; }
+    public String getTamanho() { return tamanho; }
+
+    public double getSubtotal() {
+        return produto.getValor() * quantidade;
     }
 
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public int getQuantidade_p() {
-        return quantidade_p;
-    }
-
-    public int getQuantidade_m() {
-        return quantidade_m;
-    }
-
-    public int getQuantidade_g() {
-        return quantidade_g;
+    @Override
+    public String toString() {
+        return produto.getDescricao() + " (Tam: " + tamanho + ") - Qtd: " + quantidade + " - " + NumberFormat.getCurrencyInstance(new Locale("pt", "BR")).format(getSubtotal());
     }
 }
+
