@@ -61,16 +61,26 @@ public class TelaSelecaoTamanho extends JFrame {
                 String tamanhoSelecionado = (String) tamanhoComboBox.getSelectedItem();
                 int quantidadeSelecionada = (int) quantidadeSpinner.getValue();
 
-                if (verificarEstoque(produtoId, tamanhoSelecionado, quantidadeSelecionada)) {
-                    JOptionPane.showMessageDialog(TelaSelecaoTamanho.this,
-                            "Adicionado ao carrinho: " + quantidadeSelecionada + " x " + nomeProduto + " (" + tamanhoSelecionado + ")",
-                            "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                    TelaSelecaoTamanho.this.dispose();
-                    // Aqui você adicionaria o item ao carrinho (ainda não implementado)
+                SessaoUsuario sessao = SessaoUsuario.getInstance();
+                if (sessao.isUsuarioLogado()) {
+                    if (verificarEstoque(produtoId, tamanhoSelecionado, quantidadeSelecionada)) {
+                        Carrinho.getInstance().adicionarItem(produtoId, nomeProduto, valorProduto, tamanhoSelecionado, quantidadeSelecionada);
+                        JOptionPane.showMessageDialog(TelaSelecaoTamanho.this,
+                                "Adicionado ao carrinho: " + quantidadeSelecionada + " x " + nomeProduto + " (" + tamanhoSelecionado + ")",
+                                "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                        TelaSelecaoTamanho.this.dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(TelaSelecaoTamanho.this,
+                                "Estoque insuficiente para " + nomeProduto + " (" + tamanhoSelecionado + ") na quantidade desejada.",
+                                "Erro", JOptionPane.ERROR_MESSAGE);
+                    }
                 } else {
                     JOptionPane.showMessageDialog(TelaSelecaoTamanho.this,
-                            "Estoque insuficiente para " + nomeProduto + " (" + tamanhoSelecionado + ") na quantidade desejada.",
-                            "Erro", JOptionPane.ERROR_MESSAGE);
+                            "Você precisa estar logado para adicionar itens ao carrinho.",
+                            "Aviso", JOptionPane.WARNING_MESSAGE);
+                    // Opcional: Redirecionar para a tela de login
+                    TelaLogin telaLogin = new TelaLogin();
+                    telaLogin.setVisible(true);
                 }
             }
         });
@@ -121,7 +131,6 @@ public class TelaSelecaoTamanho extends JFrame {
     }
 
     public static void main(String[] args) {
-        // Teste
-        new TelaSelecaoTamanho(1, "Camiseta", 29.90);
+        SwingUtilities.invokeLater(() -> new TelaSelecaoTamanho(1, "Camiseta", 29.90));
     }
 }

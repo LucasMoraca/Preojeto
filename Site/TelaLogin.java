@@ -78,7 +78,7 @@ public class TelaLogin extends JFrame {
 
     private String autenticarUsuario(String email, String senha) {
         String tipo = null;
-        String sql = "SELECT id, senha, tipo FROM usuarios WHERE email = ?";
+        String sql = "SELECT id, nome, senha, tipo FROM usuarios WHERE email = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, email);
@@ -87,8 +87,11 @@ public class TelaLogin extends JFrame {
                 String senhaBanco = rs.getString("senha");
                 if (senha.equals(senhaBanco)) {
                     tipo = rs.getString("tipo");
-                    // Aqui você pode armazenar o id do usuário logado se precisar
-                    // int userId = rs.getInt("id");
+                    if (tipo.equals("cliente")) {
+                        int userId = rs.getInt("id");
+                        String nomeUsuario = rs.getString("nome");
+                        SessaoUsuario.getInstance().iniciarSessao(userId, nomeUsuario, tipo);
+                    }
                 }
             }
         } catch (SQLException e) {
