@@ -17,7 +17,6 @@ public class TelaLogin extends JFrame {
     private JButton botaoEntrar; // Botão para iniciar o processo de login
     private TelaCatalogo telaCatalogo; // Referência à tela de catálogo para usuários
     private TelaBazar telaBazar; // Referência à tela específica para bazares
-    private TelaCadastro telaCadastro; // Referência à tela de cadastro
 
     // Configurações para o banco de dados MySQL
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto"; // URL de conexão com o banco de dados MySQL
@@ -25,10 +24,9 @@ public class TelaLogin extends JFrame {
     private static final String DB_PASSWORD = ""; // Senha do MySQL
 
     // Construtor da TelaLogin
-    public TelaLogin(TelaCatalogo telaCatalogo, TelaBazar telaBazar, TelaCadastro telaCadastro) {
+    public TelaLogin(TelaCatalogo telaCatalogo, TelaBazar telaBazar) {
         this.telaCatalogo = telaCatalogo; // Recebe a instância da TelaCatalogo
         this.telaBazar = telaBazar; // Recebe a instância da TelaBazar
-        this.telaCadastro = telaCadastro; // Recebe a instância da TelaCadastro
 
         setTitle("Login"); // Define o título da janela
         setSize(350, 200); // Define o tamanho da janela
@@ -141,11 +139,6 @@ public class TelaLogin extends JFrame {
     // Método para tornar a tela de login visível
     public void mostrar() {
         setVisible(true);
-    }
-
-    // Getter para a tela de cadastro (pode ser útil para mostrá-la)
-    public TelaCadastro getTelaCadastro() {
-        return telaCadastro;
     }
 
     // Método main removido daqui, pois a inicialização agora é feita na TelaInicial

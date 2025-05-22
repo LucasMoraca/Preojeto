@@ -41,12 +41,11 @@ public class TelaInicial extends JFrame implements ActionListener {
         // Inicializar as telas
         telaCatalogo = new TelaCatalogo();
         telaBazar = new TelaBazar(); // Inicializa TelaBazar
+        telaLogin = new TelaLogin(telaCatalogo, telaBazar); // Passa as referências corretas
         telaCadastro = new TelaCadastro();
-        telaLogin = new TelaLogin(telaCatalogo, telaBazar, telaCadastro); // Passa as referências corretas
 
         // Passar as referências necessárias
-        telaCadastro.setTelaLogin(telaLogin);
-        // telaCadastro.setTelaCatalogo(telaCatalogo); // Não precisa mais voltar direto para o catálogo
+        telaCadastro.setTelaCatalogo(telaCatalogo); // Para voltar ao catálogo após cadastro (se necessário)
 
         // Adicionar ActionListener aos botões
         loginButton.addActionListener(this);
