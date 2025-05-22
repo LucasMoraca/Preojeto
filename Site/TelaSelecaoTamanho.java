@@ -9,6 +9,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TelaSelecaoTamanho extends JFrame {
 
@@ -18,6 +20,7 @@ public class TelaSelecaoTamanho extends JFrame {
     private JComboBox<String> tamanhoComboBox;
     private JSpinner quantidadeSpinner;
     private JButton adicionarAoCarrinhoButton;
+    private Map<String, String> tamanhoParaColuna = new HashMap<>();
 
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projetoa3";
     private static final String DB_USER = "root";
@@ -27,6 +30,10 @@ public class TelaSelecaoTamanho extends JFrame {
         this.produtoId = produtoId;
         this.nomeProduto = nomeProduto;
         this.valorProduto = valorProduto;
+
+        tamanhoParaColuna.put("P", "quantidade_p");
+        tamanhoParaColuna.put("M", "quantidade_m");
+        tamanhoParaColuna.put("G", "quantidade_g");
 
         setTitle("Selecionar Tamanho e Quantidade");
         setSize(350, 200);
@@ -54,13 +61,12 @@ public class TelaSelecaoTamanho extends JFrame {
                 String tamanhoSelecionado = (String) tamanhoComboBox.getSelectedItem();
                 int quantidadeSelecionada = (int) quantidadeSpinner.getValue();
 
-                // Aqui você precisará verificar se há estoque suficiente no banco de dados
                 if (verificarEstoque(produtoId, tamanhoSelecionado, quantidadeSelecionada)) {
-                    // Se houver estoque, você adicionaria o item ao carrinho (ainda não implementado)
                     JOptionPane.showMessageDialog(TelaSelecaoTamanho.this,
                             "Adicionado ao carrinho: " + quantidadeSelecionada + " x " + nomeProduto + " (" + tamanhoSelecionado + ")",
                             "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                     TelaSelecaoTamanho.this.dispose();
+                    // Aqui você adicionaria o item ao carrinho (ainda não implementado)
                 } else {
                     JOptionPane.showMessageDialog(TelaSelecaoTamanho.this,
                             "Estoque insuficiente para " + nomeProduto + " (" + tamanhoSelecionado + ") na quantidade desejada.",
@@ -68,7 +74,7 @@ public class TelaSelecaoTamanho extends JFrame {
                 }
             }
         });
-        add(new JLabel("")); // Espaço em branco no grid
+        add(new JLabel("")); // Espaço em branco
         add(adicionarAoCarrinhoButton);
 
         setVisible(true);
@@ -76,37 +82,42 @@ public class TelaSelecaoTamanho extends JFrame {
 
     private String[] obterTamanhosDisponiveis(int produtoId) {
         java.util.List<String> tamanhos = new java.util.ArrayList<>();
-        String sql = "SELECT DISTINCT tamanho FROM estoque WHERE produto_id = ?";
+        String sql = "SELECT quantidade_p, quantidade_m, quantidade_g FROM produtos WHERE id = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, produtoId);
             ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                tamanhos.add(rs.getString("tamanho"));
+            if (rs.next()) {
+                if (rs.getInt("quantidade_p") > 0) tamanhos.add("P");
+                if (rs.getInt("quantidade_m") > 0) tamanhos.add("M");
+                if (rs.getInt("quantidade_g") > 0) tamanhos.add("G");
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao obter tamanhos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erro ao obter tamanhos disponíveis: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
         return tamanhos.toArray(new String[0]);
     }
 
     private boolean verificarEstoque(int produtoId, String tamanho, int quantidade) {
-        String sql = "SELECT quantidade FROM estoque WHERE produto_id = ? AND tamanho = ?";
+        String colunaEstoque = tamanhoParaColuna.get(tamanho);
+        if (colunaEstoque == null) {
+            return false; // Tamanho inválido
+        }
+        String sql = "SELECT " + colunaEstoque + " FROM produtos WHERE id = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, produtoId);
-            pstmt.setString(2, tamanho);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                int estoqueDisponivel = rs.getInt("quantidade");
+                int estoqueDisponivel = rs.getInt(colunaEstoque);
                 return estoqueDisponivel >= quantidade;
             }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Erro ao verificar estoque: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
-        return false; // Se não encontrar o tamanho, considera sem estoque
+        return false;
     }
 
     public static void main(String[] args) {

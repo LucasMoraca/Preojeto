@@ -3,11 +3,8 @@ package Site;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.io.File;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +13,7 @@ public class TelaCatalogo extends JFrame {
     private JPanel produtosPanel;
     private JScrollPane scrollPane;
     private List<ProdutoCatalogo> listaDeProdutos;
-    private JButton carrinhoButton; // Botão para ir ao carrinho
+    private JButton carrinhoButton;
 
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projetoa3";
     private static final String DB_USER = "root";
@@ -27,13 +24,12 @@ public class TelaCatalogo extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(800, 600);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout()); // Usando BorderLayout para posicionar o botão do carrinho
+        setLayout(new BorderLayout());
 
-        // Painel para o botão do carrinho no topo
+        // Painel do topo com botão do carrinho
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         carrinhoButton = new JButton("Carrinho");
         carrinhoButton.addActionListener(e -> {
-            // Abre a tela do carrinho
             TelaCarrinho telaCarrinho = new TelaCarrinho();
             telaCarrinho.setVisible(true);
         });
@@ -59,6 +55,7 @@ public class TelaCatalogo extends JFrame {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
+
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String nome = rs.getString("nome");
@@ -77,50 +74,63 @@ public class TelaCatalogo extends JFrame {
         for (ProdutoCatalogo produto : listaDeProdutos) {
             JPanel produtoPanel = new JPanel();
             produtoPanel.setLayout(new BoxLayout(produtoPanel, BoxLayout.Y_AXIS));
-            produtoPanel.setPreferredSize(new Dimension(180, 270)); // Ajustei a altura
+            produtoPanel.setPreferredSize(new Dimension(180, 270));
             produtoPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
             JLabel nomeLabel = new JLabel(produto.getNome());
-            nomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            nomeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            ImageIcon imageIcon = null;
-            if (produto.getImagemPath() != null && !produto.getImagemPath().isEmpty()) {
-                try {
-                    java.net.URL imgURL = getClass().getResource("/imagens/" + produto.getImagemPath());
-                    if (imgURL == null) {
-                        imgURL = new java.io.File(produto.getImagemPath()).toURI().toURL();
-                    }
-                    Image image = new ImageIcon(imgURL).getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
-                    imageIcon = new ImageIcon(image);
-                } catch (Exception e) {
-                    System.err.println("Erro ao carregar imagem: " + produto.getImagemPath() + " - " + e.getMessage());
-                    imageIcon = new ImageIcon(new ImageIcon(getClass().getResource("/imagens/no_image.png")).getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH));
-                }
-            } else {
-                imageIcon = new ImageIcon(new ImageIcon(getClass().getResource("/imagens/no_image.png")).getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH));
-            }
+            ImageIcon imageIcon = carregarImagem(produto.getImagemPath());
+
             JLabel imagemLabel = new JLabel(imageIcon);
-            imagemLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            imagemLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             JLabel valorLabel = new JLabel("R$ " + String.format("%.2f", produto.getValor()));
-            valorLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            valorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             JButton adicionarCarrinhoButton = new JButton("Adicionar ao Carrinho");
+            adicionarCarrinhoButton.setAlignmentX(Component.CENTER_ALIGNMENT);
             adicionarCarrinhoButton.addActionListener(e -> {
-                // Abre a tela TelaSelecaoTamanho
-                TelaSelecaoTamanho telaSelecao = new TelaSelecaoTamanho(produto.getId(), produto.getNome(), produto.getValor());
+                TelaSelecaoTamanho telaSelecao = new TelaSelecaoTamanho(
+                        produto.getId(),
+                        produto.getNome(),
+                        produto.getValor()
+                );
                 telaSelecao.setVisible(true);
             });
 
             produtoPanel.add(nomeLabel);
             produtoPanel.add(imagemLabel);
             produtoPanel.add(valorLabel);
+            produtoPanel.add(Box.createVerticalStrut(5)); // espaço entre os itens
             produtoPanel.add(adicionarCarrinhoButton);
 
             produtosPanel.add(produtoPanel);
         }
         produtosPanel.revalidate();
         produtosPanel.repaint();
+    }
+
+    private ImageIcon carregarImagem(String caminhoRelativo) {
+        if (caminhoRelativo != null && !caminhoRelativo.isEmpty()) {
+            File imgFile = new File(caminhoRelativo);
+            if (imgFile.exists()) {
+                Image image = new ImageIcon(imgFile.getAbsolutePath()).getImage().getScaledInstance(
+                        150, 150, Image.SCALE_SMOOTH);
+                return new ImageIcon(image);
+            } else {
+                System.err.println("Imagem não encontrada: " + caminhoRelativo);
+            }
+        }
+        // Se não encontrar, usa imagem padrão
+        try {
+            Image imagemPadrao = new ImageIcon(getClass().getResource("/imagens/no_image.png"))
+                    .getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
+            return new ImageIcon(imagemPadrao);
+        } catch (Exception e) {
+            System.err.println("Imagem padrão não encontrada.");
+            return new ImageIcon();
+        }
     }
 
     public static void main(String[] args) {

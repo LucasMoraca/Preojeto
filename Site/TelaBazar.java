@@ -10,17 +10,17 @@ public class TelaBazar extends JFrame {
     public TelaBazar() {
         setTitle("Página do Bazar");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(400, 200);
+        setSize(400, 250); // Aumentei a altura para acomodar o novo botão
         setLocationRelativeTo(null);
         setLayout(new FlowLayout(FlowLayout.CENTER, 50, 50)); // Layout para centralizar os botões
 
         JButton adicionarProdutoButton = new JButton("Adicionar Produto");
         JButton editarProdutoButton = new JButton("Editar Produto");
+        JButton pedidosButton = new JButton("Pedidos"); // Novo botão
 
         adicionarProdutoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Abre a TelaAdicionarProduto
                 TelaAdicionarProduto telaAdicionarProduto = new TelaAdicionarProduto();
                 telaAdicionarProduto.setVisible(true);
             }
@@ -29,14 +29,22 @@ public class TelaBazar extends JFrame {
         editarProdutoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Abre a TelaEditarProduto em tela cheia
                 TelaEditarProduto telaEditarProduto = new TelaEditarProduto();
                 telaEditarProduto.setVisible(true);
             }
         });
 
+        pedidosButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TelaPedidos telaPedidos = new TelaPedidos();
+                telaPedidos.setVisible(true);
+            }
+        });
+
         add(adicionarProdutoButton);
         add(editarProdutoButton);
+        add(pedidosButton); // Adiciona o novo botão
 
         setVisible(true);
     }

@@ -14,7 +14,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.nio.file.Paths; // Importação necessária
 
 public class TelaEditarProduto extends JFrame {
 
@@ -31,8 +30,11 @@ public class TelaEditarProduto extends JFrame {
     private JButton salvarAlteracoesButton;
     private JButton removerProdutoButton;
 
-    private List<String> newImagePaths;
-    private int selectedProductId = -1; // Para rastrear o ID do produto selecionado
+    private List<String> newImagePaths = new ArrayList<>();
+    private int selectedProductId = -1;
+    private String currentImagePath1 = null;
+    private String currentImagePath2 = null;
+    private String currentImagePath3 = null;
 
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projetoa3";
     private static final String DB_USER = "root";
@@ -41,13 +43,9 @@ public class TelaEditarProduto extends JFrame {
     public TelaEditarProduto() {
         setTitle("Editar Produto");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        // Setando para tela cheia
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-        // Para remover as bordas em alguns sistemas operacionais (opcional)
-        // setUndecorated(true);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        newImagePaths = new ArrayList<>();
 
         // Tabela de Produtos
         tableModel = new DefaultTableModel(new Object[]{"ID", "Valor", "Qtd. P", "Qtd. M", "Qtd. G", "Descrição", "Imagem 1", "Imagem 2", "Imagem 3"}, 0);
@@ -137,10 +135,8 @@ public class TelaEditarProduto extends JFrame {
 
         add(new JScrollPane(edicaoPanel), BorderLayout.CENTER);
 
-        // Carregar produtos do banco
         carregarProdutos();
 
-        // Adicionar listeners (a implementar)
         selecionarImagem1Button.addActionListener(e -> selecionarNovaImagem(1));
         selecionarImagem2Button.addActionListener(e -> selecionarNovaImagem(2));
         selecionarImagem3Button.addActionListener(e -> selecionarNovaImagem(3));
@@ -155,7 +151,10 @@ public class TelaEditarProduto extends JFrame {
                     quantidadeMField.setText(tableModel.getValueAt(selectedRow, 3).toString());
                     quantidadeGField.setText(tableModel.getValueAt(selectedRow, 4).toString());
                     descricaoArea.setText(tableModel.getValueAt(selectedRow, 5).toString());
-                    // Os paths das imagens podem ser carregados aqui se necessário
+                    currentImagePath1 = (String) tableModel.getValueAt(selectedRow, 6);
+                    currentImagePath2 = (String) tableModel.getValueAt(selectedRow, 7);
+                    currentImagePath3 = (String) tableModel.getValueAt(selectedRow, 8);
+                    newImagePaths.clear();
                 }
             }
         });
@@ -182,16 +181,16 @@ public class TelaEditarProduto extends JFrame {
             }
         });
 
-        // Já está setado para visível no final do construtor
         setVisible(true);
     }
 
     private void carregarProdutos() {
-        tableModel.setRowCount(0); // Limpa a tabela
+        tableModel.setRowCount(0);
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement pstmt = conn.prepareStatement("SELECT id, valor, quantidade_p, quantidade_m, quantidade_g, descricao, imagens1_path, imagens2_path, imagens3_path FROM produtos");
-             ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement pstmt = conn.prepareStatement("SELECT id, valor, quantidade_p, quantidade_m, quantidade_g, descricao, imagens1_path, imagens2_path, imagens3_path FROM produtos")) {
+
+            ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
                 tableModel.addRow(new Object[]{
@@ -243,6 +242,17 @@ public class TelaEditarProduto extends JFrame {
             int quantidadeG = Integer.parseInt(quantidadeGStr);
             double valor = Double.parseDouble(valorStr);
 
+            // Diretório onde as imagens serão salvas
+            File diretorioImagens = new File("imagens");
+            if (!diretorioImagens.exists()) {
+                diretorioImagens.mkdirs();
+            }
+
+            // Salvar as imagens se novas forem selecionadas
+            String imagem1Path = salvarImagemSeSelecionada(0, currentImagePath1);
+            String imagem2Path = salvarImagemSeSelecionada(1, currentImagePath2);
+            String imagem3Path = salvarImagemSeSelecionada(2, currentImagePath3);
+
             Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             String sql = "UPDATE produtos SET valor = ?, quantidade_p = ?, quantidade_m = ?, quantidade_g = ?, descricao = ?, imagens1_path = ?, imagens2_path = ?, imagens3_path = ? WHERE id = ?";
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -253,11 +263,6 @@ public class TelaEditarProduto extends JFrame {
             pstmt.setInt(4, quantidadeG);
             pstmt.setString(5, descricao);
 
-            // Determine os nomes dos arquivos das novas imagens ou mantenha os existentes
-            String imagem1Path = newImagePaths.size() > 0 && newImagePaths.get(0) != null ? Paths.get(newImagePaths.get(0)).getFileName().toString() : (String) tableModel.getValueAt(produtosTable.getSelectedRow(), 6);
-            String imagem2Path = newImagePaths.size() > 1 && newImagePaths.get(1) != null ? Paths.get(newImagePaths.get(1)).getFileName().toString() : (String) tableModel.getValueAt(produtosTable.getSelectedRow(), 7);
-            String imagem3Path = newImagePaths.size() > 2 && newImagePaths.get(2) != null ? Paths.get(newImagePaths.get(2)).getFileName().toString() : (String) tableModel.getValueAt(produtosTable.getSelectedRow(), 8);
-
             pstmt.setString(6, imagem1Path);
             pstmt.setString(7, imagem2Path);
             pstmt.setString(8, imagem3Path);
@@ -266,8 +271,8 @@ public class TelaEditarProduto extends JFrame {
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
                 JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                carregarProdutos(); // Recarrega a tabela para mostrar as alterações
-                newImagePaths.clear(); // Limpa os paths das novas imagens
+                carregarProdutos();
+                newImagePaths.clear();
             } else {
                 JOptionPane.showMessageDialog(this, "Falha ao atualizar o produto.", "Erro", JOptionPane.ERROR_MESSAGE);
             }
@@ -283,6 +288,25 @@ public class TelaEditarProduto extends JFrame {
         }
     }
 
+    private String salvarImagemSeSelecionada(int index, String currentPath) {
+        if (newImagePaths.size() > index && newImagePaths.get(index) != null) {
+            File origem = new File(newImagePaths.get(index));
+            String nomeArquivo = System.currentTimeMillis() + "_" + origem.getName();
+            File destino = new File("imagens", nomeArquivo);
+
+            try {
+                java.nio.file.Files.copy(origem.toPath(), destino.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                return "imagens/" + nomeArquivo; // Caminho relativo salvo no banco
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Erro ao salvar imagem: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+                return currentPath;
+            }
+        } else {
+            return currentPath;
+        }
+    }
+
     private void removerProdutoDoBanco() {
         if (selectedProductId == -1) {
             JOptionPane.showMessageDialog(this, "Nenhum produto selecionado para remover.", "Aviso", JOptionPane.WARNING_MESSAGE);
@@ -290,39 +314,42 @@ public class TelaEditarProduto extends JFrame {
         }
 
         int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja remover este produto?", "Confirmação", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        if (confirm == JOptionPane.YES_OPTION) {            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
                  PreparedStatement pstmt = conn.prepareStatement("DELETE FROM produtos WHERE id = ?")) {
+
                 pstmt.setInt(1, selectedProductId);
-                int rowsAffected = pstmt.executeUpdate();
-                if (rowsAffected > 0) {
+                int rowsDeleted = pstmt.executeUpdate();
+
+                if (rowsDeleted > 0) {
                     JOptionPane.showMessageDialog(this, "Produto removido com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                    carregarProdutos(); // Recarrega a tabela
-                    limparCamposEdicao();
+                    carregarProdutos();
+                    limparCampos();
                     selectedProductId = -1;
+                    newImagePaths.clear();
                 } else {
                     JOptionPane.showMessageDialog(this, "Falha ao remover o produto.", "Erro", JOptionPane.ERROR_MESSAGE);
                 }
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Erro ao acessar o banco de dados: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Erro ao acessar o banco de dados: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         }
     }
 
-    private void limparCamposEdicao() {
-        valorField.setText("");
+    private void limparCampos() {
         quantidadePField.setText("");
         quantidadeMField.setText("");
         quantidadeGField.setText("");
+        valorField.setText("");
         descricaoArea.setText("");
-        newImagePaths.clear();
+        currentImagePath1 = null;
+        currentImagePath2 = null;
+        currentImagePath3 = null;
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            TelaEditarProduto tela = new TelaEditarProduto();
-            tela.setVisible(true); // Garante que a tela seja visível
-        });
+        SwingUtilities.invokeLater(() -> new TelaEditarProduto());
     }
 }
+
