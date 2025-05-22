@@ -1,7 +1,6 @@
 // TelaEditarProduto.java
 package Site;
 
-<<<<<<< HEAD
 import java.util.List; // Importa a interface List para coleções ordenadas
 import java.util.ArrayList; // Importa a classe ArrayList para implementar listas dinâmicas
 import javax.swing.*; // Importa classes para criar interfaces gráficas Swing
@@ -21,29 +20,6 @@ import java.io.IOException; // Importa a classe para exceções de I/O
 import javax.swing.filechooser.FileNameExtensionFilter; // Importa a classe para filtros de extensão de arquivos
 import javax.swing.event.ListSelectionEvent; // Importa a classe para eventos de seleção em listas
 import javax.swing.event.ListSelectionListener; // Importa a interface para lidar com eventos de seleção em listas
-// import java.sql.ResultSet; // Importa novamente (redundante, já importado)
-=======
-import java.util.List;
-import java.util.ArrayList;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import javax.swing.table.DefaultTableModel;
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.IOException;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import java.sql.ResultSet;
->>>>>>> parent of f0e28be (Declaração)
 
 public class TelaEditarProduto extends JFrame implements ActionListener, ListSelectionListener {
 
@@ -302,29 +278,17 @@ public class TelaEditarProduto extends JFrame implements ActionListener, ListSel
     private void eliminarProduto() {
         int selectedRow = tabelaProdutos.getSelectedRow();
         if (selectedRow == -1) {
-JOptionPane.showMessageDialog(this, "Selecione um produto na tabela para eliminar.", "Aviso", JOptionPane.WARNING_MESSAGE);
-return;
-}
+            JOptionPane.showMessageDialog(this, "Selecione um produto na tabela para eliminar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-    int produtoIdParaEliminar = (int) modeloTabela.getValueAt(selectedRow, 0);
-    String nomeProduto = (String) modeloTabela.getValueAt(selectedRow, 5);
+        int produtoIdParaEliminar = (int) modeloTabela.getValueAt(selectedRow, 0);
+        String nomeProduto = (String) modeloTabela.getValueAt(selectedRow, 5);
 
-    int confirmacao = JOptionPane.showConfirmDialog(this,
-            "Deseja realmente eliminar o produto com ID " + produtoIdParaEliminar + "?\nDescrição: " + nomeProduto,
-            "Confirmar Eliminação", JOptionPane.YES_NO_OPTION);
+        int confirmacao = JOptionPane.showConfirmDialog(this,
+                "Deseja realmente eliminar o produto com ID " + produtoIdParaEliminar + "?\nDescrição: " + nomeProduto,
+                "Confirmar Eliminação", JOptionPane.YES_NO_OPTION);
 
-<<<<<<< HEAD
-    if (confirmacao == JOptionPane.YES_OPTION) {
-        String sql = "DELETE FROM produtos WHERE id = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, produtoIdParaEliminar);
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                JOptionPane.showMessageDialog(this, "Produto eliminado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                carregarProdutos(); // Recarrega a tabela após a eliminação
-                // Limpar os campos de edição após a eliminação
-=======
         if (confirmacao == JOptionPane.YES_OPTION) {
             String sql = "DELETE FROM produtos WHERE id = ?";
             try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -333,7 +297,7 @@ return;
                 int affectedRows = pstmt.executeUpdate();
                 if (affectedRows > 0) {
                     JOptionPane.showMessageDialog(this, "Produto eliminado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                    carregarProdutos(); // Recarrega a tabela
+                    carregarProdutos(); // Recarrega a tabela após a eliminação
                     // Limpar os campos de edição após a eliminação
                     campoValor.setText("");
                     campoQuantidadeP.setText("");
@@ -429,7 +393,6 @@ return;
                 carregarDadosProduto(produtoIdSelecionado);
             } else {
                 // Limpar campos de edição se nenhuma linha estiver selecionada
->>>>>>> parent of f0e28be (Declaração)
                 campoValor.setText("");
                 campoQuantidadeP.setText("");
                 campoQuantidadeM.setText("");
@@ -442,114 +405,11 @@ return;
                     labelsImagem.get(i).setIcon(null);
                     labelsImagem.get(i).setText("Sem imagem");
                 }
-            } else {
-                JOptionPane.showMessageDialog(this, "Falha ao eliminar o produto.", "Erro", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao eliminar produto: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
-}
 
-<<<<<<< HEAD
-// Salva as edições feitas no produto no banco de dados
-private void salvarEdicaoProduto() {
-    if (produtoIdSelecionado == -1) {
-        JOptionPane.showMessageDialog(this, "Selecione um produto na tabela para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
-        return;
-=======
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new TelaEditarProduto());
->>>>>>> parent of f0e28be (Declaração)
     }
-
-    String valorStr = campoValor.getText();
-    String qtdPStr = campoQuantidadeP.getText();
-    String qtdMStr = campoQuantidadeM.getText();
-    String qtdGStr = campoQuantidadeG.getText();
-    String descricao = campoDescricao.getText();
-    String imagem1Path = caminhosImagens.get(0);
-    String imagem2Path = caminhosImagens.get(1);
-    String imagem3Path = caminhosImagens.get(2);
-
-    try {
-        double valor = Double.parseDouble(valorStr);
-        int quantidadeP = Integer.parseInt(qtdPStr);
-        int quantidadeM = Integer.parseInt(qtdMStr);
-        int quantidadeG = Integer.parseInt(qtdGStr);
-
-        String sql = "UPDATE produtos SET valor = ?, quantidade_p = ?, quantidade_m = ?, quantidade_g = ?, descricao = ?, imagem1_path = ?, imagem2_path = ?, imagem3_path = ? WHERE id = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setDouble(1, valor);
-            pstmt.setInt(2, quantidadeP);
-            pstmt.setInt(3, quantidadeM);
-            pstmt.setInt(4, quantidadeG);
-            pstmt.setString(5, descricao);
-            pstmt.setString(6, imagem1Path);
-            pstmt.setString(7, imagem2Path);
-            pstmt.setString(8, imagem3Path);
-            pstmt.setInt(9, produtoIdSelecionado);
-
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                carregarProdutos(); // Recarrega a tabela para mostrar as alterações
-            } else {
-                JOptionPane.showMessageDialog(this, "Falha ao atualizar o produto.", "Erro", JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar edição: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
-
-    } catch (NumberFormatException e) {
-        JOptionPane.showMessageDialog(this, "Por favor, insira valores numéricos válidos para valor e quantidades.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
-    }
-}
-
-// Lida com os eventos de ação (cliques de botão)
-@Override
-public void actionPerformed(ActionEvent e) {
-    String actionCommand = e.getActionCommand();
-    if (actionCommand.startsWith("imagem_")) {
-        int index = Integer.parseInt(actionCommand.substring(actionCommand.indexOf("_") + 1));
-        selecionarImagem(index);
-    } else if (e.getSource() == botaoSalvarEdicao) {
-        salvarEdicaoProduto();
-    } else if (e.getSource() == botaoEliminarProduto) {
-        eliminarProduto();
-    }
-}
-
-// Lida com os eventos de mudança de seleção na tabela de produtos
-@Override
-public void valueChanged(ListSelectionEvent e) {
-    if (!e.getValueIsAdjusting()) {
-        int selectedRow = tabelaProdutos.getSelectedRow();
-        if (selectedRow != -1) {
-            produtoIdSelecionado = (int) modeloTabela.getValueAt(selectedRow, 0);
-            carregarDadosProduto(produtoIdSelecionado); // Carrega os dados do produto selecionado para os campos de edição
-        } else {
-            // Limpar campos de edição se nenhuma linha estiver selecionada
-            campoValor.setText("");
-            campoQuantidadeP.setText("");
-            campoQuantidadeM.setText("");
-            campoQuantidadeG.setText("");
-            campoDescricao.setText("");
-            for (int i = 0; i < MAX_IMAGENS; i++) {
-                caminhosImagens.set(i, null);
-                labelsImagem.get(i).setIcon(null);
-                labelsImagem.get(i).setText("Sem imagem");
-            }
-            produtoIdSelecionado = -1;
-        }
-    }
-}
-
-// Método main para executar a TelaEditarProduto individualmente
-public static void main(String[] args) {
-    SwingUtilities.invokeLater(() -> new TelaEditarProduto());
-}
 }

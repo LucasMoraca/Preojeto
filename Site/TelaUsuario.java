@@ -59,7 +59,7 @@ public class TelaUsuario extends JFrame {
                 pstmt.setInt(1, usuarioLogadoId);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
-                    String nome = rs.getString("nome");
+                    String nome = rs.getString("nome_usuario"); // Corrigido: nome_usuario em vez de nome
                     String email = rs.getString("email");
 
                     nomeLabel.setText("Nome: " + nome);

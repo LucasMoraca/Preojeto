@@ -1,19 +1,8 @@
 // TelaCatalogo.java
 package Site;
 
-<<<<<<< HEAD
-import javax.swing.*; // Importa classes para criar interfaces gráficas Swing
-import javax.swing.border.EmptyBorder; // Importa a classe para criar bordas vazias
-import java.awt.*; // Importa classes para layouts e componentes gráficos AWT
-import java.sql.Connection; // Importa a interface para a conexão com o banco de dados
-import java.sql.DriverManager; // Importa a classe para gerenciar drivers JDBC
-import java.sql.PreparedStatement; // Importa a classe para instruções SQL pré-compiladas
-import java.sql.ResultSet; // Importa a interface para o resultado de uma consulta SQL
-import java.sql.SQLException; // Importa a classe para exceções relacionadas ao SQL
-import java.util.ArrayList; // Importa a classe ArrayList para listas dinâmicas
-import java.util.List; // Importa a interface List para coleções ordenadas
-=======
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -22,8 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.border.EmptyBorder;
->>>>>>> parent of f0e28be (Declaração)
 
 public class TelaCatalogo extends JFrame {
 
@@ -66,28 +53,7 @@ public class TelaCatalogo extends JFrame {
         JScrollPane scrollPane = new JScrollPane(painelListagemItens);
         add(scrollPane, BorderLayout.CENTER);
 
-<<<<<<< HEAD
         // Adiciona ActionListener para mostrar a TelaCarrinho ao clicar no botão
-=======
-        // ActionListener para o botão Perfil (REMOVIDO)
-        /*
-        botaoPerfil.addActionListener(e -> {
-            System.out.println("Usuário logado? " + TelaCatalogo.isUsuarioLogado());
-            if (TelaCatalogo.isUsuarioLogado()) {
-                telaUsuario.setLocationRelativeTo(this);
-                telaUsuario.exibirPerfilLogado();
-            } else {
-                JOptionPane.showMessageDialog(this, "Você precisa estar logado para acessar o perfil.", "Aviso", JOptionPane.WARNING_MESSAGE);
-                if (telaLogin != null) {
-                    telaLogin.setLocationRelativeTo(this);
-                    telaLogin.mostrar();
-                }
-            }
-        });
-        */
-
-        // Adiciona ActionListener para mostrar a TelaCarrinho
->>>>>>> parent of f0e28be (Declaração)
         botaoCarrinho.addActionListener(e -> {
             telaCarrinho.setLocationRelativeTo(this);
             telaCarrinho.mostrar();
@@ -162,13 +128,9 @@ public class TelaCatalogo extends JFrame {
             panel.add(Box.createVerticalStrut(5));
         }
 
-<<<<<<< HEAD
         // Exibir descrição do produto (truncada se for muito longa)
         String descricao = produto.getDescricao();
         JLabel descricaoLabel = new JLabel("Descrição: " + (descricao.length() > 50 ? descricao.substring(0, 50) + "..." : descricao));
-=======
-        JLabel descricaoLabel = new JLabel("Descrição: " + (produto.getDescricao().length() > 50 ? produto.getDescricao().substring(0, 50) + "..." : produto.getDescricao()));
->>>>>>> parent of f0e28be (Declaração)
         descricaoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(descricaoLabel);
 
