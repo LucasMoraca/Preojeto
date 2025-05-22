@@ -2,6 +2,7 @@
 package Site;
 
 import javax.swing.*; // Importa classes para criar interfaces gráficas Swing
+import javax.swing.border.EmptyBorder; // Importa a classe para criar bordas vazias
 import java.awt.*; // Importa classes para layouts e componentes gráficos AWT
 import java.sql.Connection; // Importa a interface para a conexão com o banco de dados
 import java.sql.DriverManager; // Importa a classe para gerenciar drivers JDBC
@@ -10,7 +11,6 @@ import java.sql.ResultSet; // Importa a interface para o resultado de uma consul
 import java.sql.SQLException; // Importa a classe para exceções relacionadas ao SQL
 import java.util.ArrayList; // Importa a classe ArrayList para listas dinâmicas
 import java.util.List; // Importa a interface List para coleções ordenadas
-import javax.swing.border.EmptyBorder; // Importa a classe para criar bordas vazias
 
 // A classe TelaCatalogo herda de JFrame (janela principal)
 public class TelaCatalogo extends JFrame {
@@ -25,7 +25,7 @@ public class TelaCatalogo extends JFrame {
     // Variável estática para rastrear o estado de login do usuário
     private static boolean usuarioEstaLogado = false;
 
-    // Configurações do banco de dados MySQL
+    // Configurações do banco de dados MySQL (poderiam ser externalizadas em um arquivo de configuração)
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "";
@@ -55,23 +55,6 @@ public class TelaCatalogo extends JFrame {
         painelListagemItens.setBorder(BorderFactory.createTitledBorder("Itens do Catálogo")); // Adiciona uma borda com título
         JScrollPane scrollPane = new JScrollPane(painelListagemItens); // Adiciona barra de rolagem ao painel de listagem
         add(scrollPane, BorderLayout.CENTER); // Adiciona o painel de listagem no centro da janela
-
-        // ActionListener para o botão Perfil (REMOVIDO)
-        /*
-        botaoPerfil.addActionListener(e -> {
-            System.out.println("Usuário logado? " + TelaCatalogo.isUsuarioLogado());
-            if (TelaCatalogo.isUsuarioLogado()) {
-                telaUsuario.setLocationRelativeTo(this);
-                telaUsuario.exibirPerfilLogado();
-            } else {
-                JOptionPane.showMessageDialog(this, "Você precisa estar logado para acessar o perfil.", "Aviso", JOptionPane.WARNING_MESSAGE);
-                if (telaLogin != null) {
-                    telaLogin.setLocationRelativeTo(this);
-                    telaLogin.mostrar();
-                }
-            }
-        });
-        */
 
         // Adiciona ActionListener para mostrar a TelaCarrinho ao clicar no botão
         botaoCarrinho.addActionListener(e -> {
@@ -152,7 +135,8 @@ public class TelaCatalogo extends JFrame {
         }
 
         // Exibir descrição do produto (truncada se for muito longa)
-        JLabel descricaoLabel = new JLabel("Descrição: " + (produto.getDescricao().length() > 50 ? produto.getDescricao().substring(0, 50) + "..." : produto.getDescricao()));
+        String descricao = produto.getDescricao();
+        JLabel descricaoLabel = new JLabel("Descrição: " + (descricao.length() > 50 ? descricao.substring(0, 50) + "..." : descricao));
         descricaoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(descricaoLabel);
 
