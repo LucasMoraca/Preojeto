@@ -1,200 +1,213 @@
 package Site;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.io.File;
-import javax.swing.filechooser.FileNameExtensionFilter;
+import java.util.ArrayList;
+import java.util.List;
 
-public class TelaAdicionarProduto extends JFrame implements ActionListener {
+public class TelaAdicionarProduto extends JFrame {
 
-    private List<JButton> botoesImagem;
-    private List<JLabel> labelsImagem;
-    private JTextField campoQuantidadeP;
-    private JTextField campoQuantidadeM;
-    private JTextField campoQuantidadeG;
-    private JTextField campoValor;
-    private JTextArea campoDescricao;
-    private JButton botaoSalvar;
+    private JTextField quantidadePField;
+    private JTextField quantidadeMField;
+    private JTextField quantidadeGField;
+    private JTextField valorField;
+    private JTextArea descricaoArea;
+    private JButton salvarProdutoButton;
+    private List<String> imagePaths;
+    private JButton adicionarImagem1Button;
+    private JButton adicionarImagem2Button;
+    private JButton adicionarImagem3Button;
 
-    private static final int MAX_IMAGENS = 3;
-    private List<String> caminhosImagens;
-
-    private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto";
+    private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projetoa3";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "";
+    private static final String IMAGES_DIRECTORY = "imagens_produtos"; // Diretório para salvar as imagens
 
     public TelaAdicionarProduto() {
         setTitle("Adicionar Produto");
-        setSize(600, 550);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(600, 400);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout());
+        imagePaths = new ArrayList<>();
 
-        caminhosImagens = new ArrayList<>();
-        botoesImagem = new ArrayList<>();
-        labelsImagem = new ArrayList<>();
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        adicionarImagem1Button = new JButton("Adicionar Imagem 1");
+        adicionarImagem2Button = new JButton("Adicionar Imagem 2");
+        adicionarImagem3Button = new JButton("Adicionar Imagem 3");
+        topPanel.add(adicionarImagem1Button);
+        topPanel.add(adicionarImagem2Button);
+        topPanel.add(adicionarImagem3Button);
+        add(topPanel, BorderLayout.NORTH);
 
-        // Painel imagens
-        JPanel painelImagens = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        for (int i = 0; i < MAX_IMAGENS; i++) {
-            JButton botaoImagem = new JButton("Adicionar Imagem " + (i + 1));
-            botaoImagem.setActionCommand("imagem_" + i);
-            botaoImagem.addActionListener(this);
-            botoesImagem.add(botaoImagem);
+        JPanel inputPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        inputPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-            JLabel labelImagem = new JLabel();
-            labelImagem.setPreferredSize(new Dimension(100, 100));
-            labelImagem.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            labelsImagem.add(labelImagem);
+        inputPanel.add(new JLabel("Quantidade (P):"));
+        quantidadePField = new JTextField();
+        inputPanel.add(quantidadePField);
 
-            JPanel painelImagemIndividual = new JPanel(new BorderLayout());
-            painelImagemIndividual.add(botaoImagem, BorderLayout.NORTH);
-            painelImagemIndividual.add(labelImagem, BorderLayout.CENTER);
-            painelImagens.add(painelImagemIndividual);
-        }
-        add(painelImagens, BorderLayout.NORTH);
+        inputPanel.add(new JLabel("Quantidade (M):"));
+        quantidadeMField = new JTextField();
+        inputPanel.add(quantidadeMField);
 
-        // Painel tamanhos
-        JPanel painelTamanhos = new JPanel(new GridLayout(3, 2, 10, 10));
-        painelTamanhos.add(new JLabel("Quantidade (P):", SwingConstants.RIGHT));
-        campoQuantidadeP = new JTextField();
-        painelTamanhos.add(campoQuantidadeP);
-        painelTamanhos.add(new JLabel("Quantidade (M):", SwingConstants.RIGHT));
-        campoQuantidadeM = new JTextField();
-        painelTamanhos.add(campoQuantidadeM);
-        painelTamanhos.add(new JLabel("Quantidade (G):", SwingConstants.RIGHT));
-        campoQuantidadeG = new JTextField();
-        painelTamanhos.add(campoQuantidadeG);
+        inputPanel.add(new JLabel("Quantidade (G):"));
+        quantidadeGField = new JTextField();
+        inputPanel.add(quantidadeGField);
 
-        // Painel valor e descrição
-        JPanel painelDetalhes = new JPanel(new GridLayout(2, 2, 10, 10));
-        painelDetalhes.add(new JLabel("Valor:", SwingConstants.RIGHT));
-        campoValor = new JTextField();
-        painelDetalhes.add(campoValor);
-        painelDetalhes.add(new JLabel("Descrição:", SwingConstants.RIGHT));
-        campoDescricao = new JTextArea();
-        campoDescricao.setLineWrap(true);
-        campoDescricao.setWrapStyleWord(true);
-        JScrollPane scrollDescricao = new JScrollPane(campoDescricao);
-        painelDetalhes.add(scrollDescricao);
+        inputPanel.add(new JLabel("Valor:"));
+        valorField = new JTextField();
+        inputPanel.add(valorField);
 
-        JPanel painelInfoProduto = new JPanel(new BorderLayout());
-        painelInfoProduto.add(painelTamanhos, BorderLayout.NORTH);
-        painelInfoProduto.add(painelDetalhes, BorderLayout.CENTER);
+        inputPanel.add(new JLabel("Descrição:"));
+        descricaoArea = new JTextArea(5, 20);
+        descricaoArea.setLineWrap(true);
+        descricaoArea.setWrapStyleWord(true);
+        inputPanel.add(new JScrollPane(descricaoArea));
 
-        add(painelInfoProduto, BorderLayout.CENTER);
+        add(inputPanel, BorderLayout.CENTER);
 
-        botaoSalvar = new JButton("Salvar Produto");
-        botaoSalvar.addActionListener(this);
-        JPanel painelSalvar = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        painelSalvar.add(botaoSalvar);
-        add(painelSalvar, BorderLayout.SOUTH);
-    }
+        salvarProdutoButton = new JButton("Salvar Produto");
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomPanel.add(salvarProdutoButton);
+        add(bottomPanel, BorderLayout.SOUTH);
 
-    public void mostrar() {
+        // Ação para adicionar imagens
+        adicionarImagem1Button.addActionListener(e -> selecionarImagem(1));
+        adicionarImagem2Button.addActionListener(e -> selecionarImagem(2));
+        adicionarImagem3Button.addActionListener(e -> selecionarImagem(3));
+
+        // Ação para salvar o produto
+        salvarProdutoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                salvarProdutoNoBanco();
+            }
+        });
+
         setVisible(true);
-        toFront();
     }
 
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+    private void selecionarImagem(int imagemNumero) {
+        JFileChooser fileChooser = new JFileChooser();
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            if (imagePaths.size() < imagemNumero) {
+                imagePaths.add(selectedFile.getAbsolutePath());
+            } else {
+                imagePaths.set(imagemNumero - 1, selectedFile.getAbsolutePath());
+            }
+            JOptionPane.showMessageDialog(this, "Imagem " + imagemNumero + " selecionada: " + selectedFile.getName(), "Imagem Selecionada", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
-    private boolean salvarProdutoNoBanco(List<String> caminhosImagens, int quantidadeP, int quantidadeM, int quantidadeG, double valor, String descricao) {
-        String sql = "INSERT INTO produtos (imagem1_path, imagem2_path, imagem3_path, quantidade_p, quantidade_m, quantidade_g, valor, descricao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, caminhosImagens.size() > 0 ? caminhosImagens.get(0) : null);
-            pstmt.setString(2, caminhosImagens.size() > 1 ? caminhosImagens.get(1) : null);
-            pstmt.setString(3, caminhosImagens.size() > 2 ? caminhosImagens.get(2) : null);
+    private void salvarProdutoNoBanco() {
+        String quantidadePStr = quantidadePField.getText();
+        String quantidadeMStr = quantidadeMField.getText();
+        String quantidadeGStr = quantidadeGField.getText();
+        String valorStr = valorField.getText();
+        String descricao = descricaoArea.getText();
+
+        if (quantidadePStr.isEmpty() || quantidadeMStr.isEmpty() || quantidadeGStr.isEmpty() || valorStr.isEmpty() || descricao.isEmpty() || imagePaths.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Por favor, preencha todos os campos e selecione pelo menos uma imagem.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            int quantidadeP = Integer.parseInt(quantidadePStr);
+            int quantidadeM = Integer.parseInt(quantidadeMStr);
+            int quantidadeG = Integer.parseInt(quantidadeGStr);
+            double valor = Double.parseDouble(valorStr);
+
+            Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            String sql = "INSERT INTO produtos (nome, descricao, valor, quantidade_p, quantidade_m, quantidade_g, imagens1_path, imagens2_path, imagens3_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+
+            // Por enquanto, vamos usar o nome do arquivo como path no banco
+            String imageName1 = imagePaths.size() > 0 ? Paths.get(imagePaths.get(0)).getFileName().toString() : null;
+            String imageName2 = imagePaths.size() > 1 ? Paths.get(imagePaths.get(1)).getFileName().toString() : null;
+            String imageName3 = imagePaths.size() > 2 ? Paths.get(imagePaths.get(2)).getFileName().toString() : null;
+
+            pstmt.setString(1, "Nome do Produto (a implementar)"); // TODO: Adicionar campo nome
+            pstmt.setString(2, descricao);
+            pstmt.setDouble(3, valor);
             pstmt.setInt(4, quantidadeP);
             pstmt.setInt(5, quantidadeM);
             pstmt.setInt(6, quantidadeG);
-            pstmt.setDouble(7, valor);
-            pstmt.setString(8, descricao);
-            int affectedRows = pstmt.executeUpdate();
-            return affectedRows > 0;
-        } catch (SQLException e) {
-            System.err.println("Erro ao salvar produto: " + e.getMessage());
-            return false;
+            pstmt.setString(7, imageName1);
+            pstmt.setString(8, imageName2);
+            pstmt.setString(9, imageName3);
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(this, "Produto salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                limparCampos();
+                // TODO: Lógica para copiar as imagens para o diretório do servidor
+                copiarImagensParaDiretorio();
+            } else {
+                JOptionPane.showMessageDialog(this, "Falha ao salvar o produto.", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+
+            pstmt.close();
+            conn.close();
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Por favor, insira valores numéricos válidos para quantidade e valor.", "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao acessar o banco de dados: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
-
-        if (command.startsWith("imagem_")) {
-            int index = Integer.parseInt(command.split("_")[1]);
-            JFileChooser fileChooser = new JFileChooser();
-            FileNameExtensionFilter filter = new FileNameExtensionFilter("Imagens", "jpg", "jpeg", "png", "gif");
-            fileChooser.setFileFilter(filter);
-            int returnVal = fileChooser.showOpenDialog(this);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                String caminho = selectedFile.getAbsolutePath();
-
-                if (index < caminhosImagens.size()) {
-                    caminhosImagens.set(index, caminho);
-                } else {
-                    // Preenche com null até o índice para evitar IndexOutOfBounds
-                    while (caminhosImagens.size() < index) {
-                        caminhosImagens.add(null);
-                    }
-                    caminhosImagens.add(caminho);
-                }
-
-                ImageIcon icon = new ImageIcon(new ImageIcon(caminho).getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH));
-                labelsImagem.get(index).setIcon(icon);
-                labelsImagem.get(index).setText(null);
-            }
-        } else if (e.getSource() == botaoSalvar) {
+    private void copiarImagensParaDiretorio() {
+        Path directory = Paths.get(IMAGES_DIRECTORY);
+        if (!Files.exists(directory)) {
             try {
-                int quantidadeP = Integer.parseInt(campoQuantidadeP.getText().isEmpty() ? "0" : campoQuantidadeP.getText());
-                int quantidadeM = Integer.parseInt(campoQuantidadeM.getText().isEmpty() ? "0" : campoQuantidadeM.getText());
-                int quantidadeG = Integer.parseInt(campoQuantidadeG.getText().isEmpty() ? "0" : campoQuantidadeG.getText());
-
-                String valorTexto = campoValor.getText().trim();
-                if (valorTexto.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Por favor, informe o valor do produto.", "Erro", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                double valor = Double.parseDouble(valorTexto);
-
-                String descricao = campoDescricao.getText();
-
-                if (salvarProdutoNoBanco(caminhosImagens, quantidadeP, quantidadeM, quantidadeG, valor, descricao)) {
-                    JOptionPane.showMessageDialog(this, "Produto adicionado com sucesso!");
-
-                    // Limpar campos e imagens
-                    for (JLabel label : labelsImagem) {
-                        label.setIcon(null);
-                        label.setText("");
-                    }
-                    caminhosImagens.clear();
-                    campoQuantidadeP.setText("");
-                    campoQuantidadeM.setText("");
-                    campoQuantidadeG.setText("");
-                    campoValor.setText("");
-                    campoDescricao.setText("");
-                } else {
-                    JOptionPane.showMessageDialog(this, "Erro ao adicionar o produto.", "Erro", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "As quantidades e o valor devem ser números válidos.", "Erro", JOptionPane.ERROR_MESSAGE);
+                Files.createDirectories(directory);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Erro ao criar diretório de imagens: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
             }
         }
+
+        for (String sourcePath : imagePaths) {
+            if (sourcePath != null && !sourcePath.isEmpty()) {
+                Path source = Paths.get(sourcePath);
+                Path destination = directory.resolve(source.getFileName());
+                try {
+                    Files.copy(source, destination);
+                    System.out.println("Imagem copiada para: " + destination.toString());
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(this, "Erro ao copiar imagem: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+        JOptionPane.showMessageDialog(this, "Imagens salvas no servidor.", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void limparCampos() {
+        quantidadePField.setText("");
+        quantidadeMField.setText("");
+        quantidadeGField.setText("");
+        valorField.setText("");
+        descricaoArea.setText("");
+        imagePaths.clear();
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new TelaAdicionarProduto().mostrar());
+        SwingUtilities.invokeLater(() -> new TelaAdicionarProduto());
     }
 }

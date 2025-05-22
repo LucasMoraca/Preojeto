@@ -1,129 +1,104 @@
-// TelaLogin.java
 package Site;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.sql.*;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class TelaLogin extends JFrame {
-    private JTextField campoEmail;
-    private JPasswordField campoSenha;
-    private JButton botaoEntrar;
-    private TelaCatalogo telaCatalogo;
-    private TelaBazar telaBazar;
 
-    // Banco de dados
-    private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto";
+    private JTextField emailField;
+    private JPasswordField senhaField;
+    private JButton loginButton;
+    private JButton cadastrarButton;
+
+    private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projetoa3";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "";
 
-    public TelaLogin(TelaCatalogo telaCatalogo, TelaBazar telaBazar) {
-        this.telaCatalogo = telaCatalogo;
-        this.telaBazar = telaBazar;
-
+    public TelaLogin() {
         setTitle("Login");
-        setSize(400, 220);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(300, 200);
         setLocationRelativeTo(null);
+        setLayout(new GridLayout(4, 2, 10, 10));
+        getRootPane().setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        inicializarComponentes();
-        configurarEventos();
-    }
+        add(new JLabel("Email:"));
+        emailField = new JTextField();
+        add(emailField);
 
-    private void inicializarComponentes() {
-        JPanel painelCampos = new JPanel(new GridLayout(2, 2, 10, 10));
-        painelCampos.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        add(new JLabel("Senha:"));
+        senhaField = new JPasswordField();
+        add(senhaField);
 
-        painelCampos.add(new JLabel("Email:", SwingConstants.RIGHT));
-        campoEmail = new JTextField();
-        painelCampos.add(campoEmail);
-
-        painelCampos.add(new JLabel("Senha:", SwingConstants.RIGHT));
-        campoSenha = new JPasswordField();
-        painelCampos.add(campoSenha);
-
-        botaoEntrar = new JButton("Entrar");
-
-        JPanel painelBotao = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        painelBotao.add(botaoEntrar);
-
-        setLayout(new BorderLayout(10, 10));
-        add(painelCampos, BorderLayout.CENTER);
-        add(painelBotao, BorderLayout.SOUTH);
-    }
-
-    private void configurarEventos() {
-        botaoEntrar.addActionListener((ActionEvent e) -> {
-            String email = campoEmail.getText().trim();
-            String senha = new String(campoSenha.getPassword()).trim();
-
-            if (email.isEmpty() || senha.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Preencha todos os campos.", "Atenção", JOptionPane.WARNING_MESSAGE);
-                return;
+        add(new JLabel("")); // Espaço em branco
+        loginButton = new JButton("Login");
+        loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String email = emailField.getText();
+                String senha = new String(senhaField.getPassword());
+                String tipoUsuario = autenticarUsuario(email, senha);
+                if (tipoUsuario != null) {
+                    JOptionPane.showMessageDialog(TelaLogin.this, "Login realizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                    TelaLogin.this.dispose();
+                    if (tipoUsuario.equals("bazar")) {
+                        TelaBazar telaBazar = new TelaBazar();
+                        telaBazar.setVisible(true);
+                    } else if (tipoUsuario.equals("cliente")) {
+                        TelaCatalogo telaCatalogo = new TelaCatalogo();
+                        telaCatalogo.setVisible(true);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(TelaLogin.this, "Email ou senha incorretos.", "Erro", JOptionPane.ERROR_MESSAGE);
+                }
             }
-
-            // Autenticação como usuário
-            Integer usuarioId = autenticar("usuarios", email, senha);
-            if (usuarioId != null) {
-                JOptionPane.showMessageDialog(this, "Login de usuário bem-sucedido!");
-
-                TelaCatalogo.setUsuarioLogado(true);
-                TelaUsuario.setUsuarioLogadoId(usuarioId);
-
-                SwingUtilities.invokeLater(() -> {
-                    telaCatalogo.setLocationRelativeTo(this);
-                    telaCatalogo.mostrar();
-                    dispose();
-                });
-                return;
-            }
-
-            // Autenticação como bazar
-            Integer bazarId = autenticar("bazares", email, senha);
-            if (bazarId != null) {
-                JOptionPane.showMessageDialog(this, "Login de bazar bem-sucedido!");
-
-                SwingUtilities.invokeLater(() -> {
-                    telaBazar.setLocationRelativeTo(this);
-                    telaBazar.mostrar();
-                    dispose();
-                });
-                return;
-            }
-
-            // Nenhuma autenticação bem-sucedida
-            JOptionPane.showMessageDialog(this, "Email ou senha incorretos.", "Erro", JOptionPane.ERROR_MESSAGE);
         });
+        add(loginButton);
+
+        add(new JLabel("")); // Espaço em branco
+        cadastrarButton = new JButton("Cadastrar");
+        cadastrarButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TelaCadastro telaCadastro = new TelaCadastro();
+                telaCadastro.setVisible(true);
+            }
+        });
+        add(cadastrarButton);
+
+        setVisible(true);
     }
 
-    /** Método genérico para autenticação em uma tabela */
-    private Integer autenticar(String tabela, String email, String senha) {
-        String sql = "SELECT id FROM " + tabela + " WHERE email = ? AND senha = ?";
-        try (Connection conn = getConnection();
+    private String autenticarUsuario(String email, String senha) {
+        String tipo = null;
+        String sql = "SELECT id, senha, tipo FROM usuarios WHERE email = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setString(1, email);
-            pstmt.setString(2, senha);
-
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                return rs.getInt("id");
+                String senhaBanco = rs.getString("senha");
+                if (senha.equals(senhaBanco)) {
+                    tipo = rs.getString("tipo");
+                    // Aqui você pode armazenar o id do usuário logado se precisar
+                    // int userId = rs.getInt("id");
+                }
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao conectar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erro ao autenticar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
-        return null;
+        return tipo;
     }
 
-    /** Conexão com o banco de dados */
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-    }
-
-    /** Torna a tela de login visível */
-    public void mostrar() {
-        setVisible(true);
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new TelaLogin());
     }
 }
