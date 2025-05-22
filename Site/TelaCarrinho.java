@@ -2,9 +2,12 @@
 package Site;
 
 import javax.swing.*;
+<<<<<<< HEAD
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
+=======
+>>>>>>> parent of f0e28be (Declaração)
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
@@ -15,6 +18,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+<<<<<<< HEAD
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,11 +32,31 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
     private double currentTotal = 0.0;
     private JTextArea enderecoTextArea;
     private JButton confirmarCompraButton;
+=======
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.DefaultListModel;
+import javax.swing.border.TitledBorder;
+
+public class TelaCarrinho extends JFrame implements ActionListener, ListSelectionListener {
+
+    private DefaultListModel<ItemCarrinho> carrinhoListModel;
+    private JList<ItemCarrinho> carrinhoJList;
+    private JButton removerItemButton;
+    private JButton alterarQuantidadeButton;
+    private JLabel totalLabel;
+    private JTextArea enderecoTextArea;
+    private JButton confirmarCompraButton;
+    private List<ItemCarrinho> itensCarrinho;
+>>>>>>> parent of f0e28be (Declaração)
     private JRadioButton pixRadioButton;
     private JRadioButton cartaoRadioButton;
     private ButtonGroup pagamentoGroup;
     private String metodoPagamentoSelecionado = null;
+<<<<<<< HEAD
     private List<ItemCarrinho> itensCarrinho = new ArrayList<>();
+=======
+>>>>>>> parent of f0e28be (Declaração)
 
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto";
     private static final String DB_USER = "root";
@@ -40,6 +64,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
 
     public TelaCarrinho() {
         setTitle("Carrinho de Compras");
+<<<<<<< HEAD
         setSize(950, 700); // Aumentei um pouco a largura
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -98,6 +123,48 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
 
         JPanel pagamentoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         pagamentoPanel.setBorder(BorderFactory.createTitledBorder("Pagamento"));
+=======
+        setSize(700, 500);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10, 10));
+
+        itensCarrinho = new ArrayList<>();
+        carrinhoListModel = new DefaultListModel<>();
+        carrinhoJList = new JList<>(carrinhoListModel);
+        carrinhoJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        carrinhoJList.addListSelectionListener(this);
+        JScrollPane carrinhoScrollPane = new JScrollPane(carrinhoJList);
+        add(carrinhoScrollPane, BorderLayout.CENTER);
+
+        JPanel botoesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        removerItemButton = new JButton("Remover Item");
+        removerItemButton.addActionListener(this);
+        removerItemButton.setEnabled(false);
+        botoesPanel.add(removerItemButton);
+
+        alterarQuantidadeButton = new JButton("Alterar Qtd.");
+        alterarQuantidadeButton.addActionListener(this);
+        alterarQuantidadeButton.setEnabled(false);
+        botoesPanel.add(alterarQuantidadeButton);
+
+        add(botoesPanel, BorderLayout.SOUTH);
+
+        JPanel checkoutPanel = new JPanel();
+        checkoutPanel.setLayout(new BoxLayout(checkoutPanel, BoxLayout.Y_AXIS));
+        checkoutPanel.setBorder(new TitledBorder("Checkout"));
+
+        totalLabel = new JLabel("Total: R$ 0.00");
+        checkoutPanel.add(totalLabel);
+
+        checkoutPanel.add(new JLabel("Endereço de Entrega:"));
+        enderecoTextArea = new JTextArea(3, 30);
+        JScrollPane enderecoScrollPane = new JScrollPane(enderecoTextArea);
+        checkoutPanel.add(enderecoScrollPane);
+
+        JPanel pagamentoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pagamentoPanel.setBorder(new TitledBorder("Pagamento"));
+>>>>>>> parent of f0e28be (Declaração)
         pixRadioButton = new JRadioButton("Pix");
         cartaoRadioButton = new JRadioButton("Cartão de Crédito");
         pagamentoGroup = new ButtonGroup();
@@ -107,6 +174,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         cartaoRadioButton.addActionListener(this);
         pagamentoPanel.add(pixRadioButton);
         pagamentoPanel.add(cartaoRadioButton);
+<<<<<<< HEAD
         panel.add(pagamentoPanel);
         panel.add(Box.createVerticalGlue()); // Empurra para cima
 
@@ -126,11 +194,24 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         footer.add(totalLabel, BorderLayout.WEST);
 
         return footer;
+=======
+        checkoutPanel.add(pagamentoPanel);
+
+        confirmarCompraButton = new JButton("Confirmar Compra");
+        confirmarCompraButton.addActionListener(this);
+        checkoutPanel.add(confirmarCompraButton);
+
+        add(checkoutPanel, BorderLayout.EAST);
+
+        atualizarTotal();
+        setVisible(false);
+>>>>>>> parent of f0e28be (Declaração)
     }
 
     public void adicionarItem(Produto produto, int quantidade, String tamanho) {
         ItemCarrinho novoItem = new ItemCarrinho(produto, quantidade, tamanho);
         itensCarrinho.add(novoItem);
+<<<<<<< HEAD
         addCartItemToPanel(novoItem);
         atualizarTotal();
     }
@@ -190,6 +271,37 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
                 int resposta = JOptionPane.showConfirmDialog(this, "Remover " + finalItem.getProduto().getDescricao() + "?", "Remover Item", JOptionPane.YES_NO_OPTION);
                 if (resposta == JOptionPane.YES_OPTION) {
                     removerItem(itensCarrinho.indexOf(finalItem));
+=======
+        carrinhoListModel.addElement(novoItem);
+        atualizarTotal();
+    }
+
+    public void removerItem(int index) {
+        if (index >= 0 && index < itensCarrinho.size()) {
+            itensCarrinho.remove(index);
+            carrinhoListModel.remove(index);
+            atualizarTotal();
+            removerItemButton.setEnabled(false);
+            alterarQuantidadeButton.setEnabled(false);
+        }
+    }
+
+    private void mostrarDialogoAlterarQuantidade() {
+        int selectedIndex = carrinhoJList.getSelectedIndex();
+        if (selectedIndex != -1) {
+            ItemCarrinho item = itensCarrinho.get(selectedIndex);
+            String novaQtdStr = JOptionPane.showInputDialog(this, "Nova quantidade para " + item.getProduto().getDescricao() + ":", item.getQuantidade());
+            if (novaQtdStr != null) {
+                try {
+                    int novaQuantidade = Integer.parseInt(novaQtdStr);
+                    if (novaQuantidade > 0) {
+                        atualizarQuantidade(selectedIndex, novaQuantidade);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "A quantidade deve ser maior que zero.", "Aviso", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(this, "Por favor, insira um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);
+>>>>>>> parent of f0e28be (Declaração)
                 }
             }
         });
@@ -276,10 +388,18 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         }
     }
 
+<<<<<<< HEAD
     public void removerItem(int index) {
         if (index >= 0 && index < itensCarrinho.size()) {
             itensCarrinho.remove(index);
             atualizarExibicaoCarrinho();
+=======
+    public void atualizarQuantidade(int index, int novaQuantidade) {
+        if (index >= 0 && index < itensCarrinho.size()) {
+            itensCarrinho.get(index).setQuantidade(novaQuantidade);
+            carrinhoListModel.setElementAt(itensCarrinho.get(index), index);
+            atualizarTotal();
+>>>>>>> parent of f0e28be (Declaração)
         }
     }
 
@@ -405,6 +525,10 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
             return;
         }
 
+<<<<<<< HEAD
+=======
+        // Nova verificação de estoque antes de prosseguir
+>>>>>>> parent of f0e28be (Declaração)
         if (!verificarEstoque()) {
             return;
         }
@@ -422,7 +546,12 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
             atualizarEstoqueEBanco();
             JOptionPane.showMessageDialog(this, "Compra finalizada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             itensCarrinho.clear();
+<<<<<<< HEAD
             atualizarExibicaoCarrinho();
+=======
+            carrinhoListModel.clear();
+            atualizarTotal();
+>>>>>>> parent of f0e28be (Declaração)
             enderecoTextArea.setText("");
             pagamentoGroup.clearSelection();
             metodoPagamentoSelecionado = null;
@@ -437,6 +566,7 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         setVisible(true);
     }
 
+<<<<<<< HEAD
     private void atualizarExibicaoCarrinho() {
         cartItemsPanel.removeAll();
         for (ItemCarrinho item : itensCarrinho) {
@@ -447,6 +577,8 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
         atualizarTotal();
     }
 
+=======
+>>>>>>> parent of f0e28be (Declaração)
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == confirmarCompraButton) {
@@ -468,11 +600,12 @@ public class TelaCarrinho extends JFrame implements ActionListener, ListSelectio
             TelaCarrinho tela = new TelaCarrinho();
             Produto p1 = new Produto(1, 25.00, 10, 5, 2, "Camiseta Azul", "caminho/azul.jpg");
             Produto p2 = new Produto(2, 50.00, 2, 8, 3, "Calça Jeans", "caminho/jeans.jpg");
-            tela.adicionarItem(p1, 1, "M");
+            tela.adicionarItem(p1, 6, "M"); // Quantidade maior que o estoque (5)
             tela.adicionarItem(p2, 1, "G");
             tela.mostrar();
         });
     }
+<<<<<<< HEAD
 }
 
 // Classe auxiliar para representar um item no carrinho
@@ -544,4 +677,6 @@ class Produto {
     public String getDescricao() {
         return descricao;
     }
+=======
+>>>>>>> parent of f0e28be (Declaração)
 }

@@ -24,7 +24,7 @@ public class TelaCadastro extends JFrame {
     private JPanel painelForcaSenhaCor;
     private JButton botaoCadastrarUsuario;
     private JButton botaoCadastrarBazar;
-    private TelaLogin telaLogin; // Referência para TelaLogin
+    private TelaLogin telaLogin; // Alterado para TelaLogin
 
     // Configurações para o banco de dados MySQL
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projeto"; // Ajuste a URL se necessário
@@ -84,7 +84,9 @@ public class TelaCadastro extends JFrame {
         add(Box.createHorizontalStrut(10), BorderLayout.WEST);
         add(Box.createHorizontalStrut(10), BorderLayout.EAST);
 
-        // telaLogin inicializada como null, será setada externamente
+        // telaLogin inicializada aqui, será usada após o cadastro de usuário
+        // Precisa receber as instâncias de TelaCatalogo e TelaBazar para criar TelaLogin corretamente
+        // Isso será feito no método setTelaLogin
         telaLogin = null;
 
         campoSenha.getDocument().addDocumentListener(new DocumentListener() {

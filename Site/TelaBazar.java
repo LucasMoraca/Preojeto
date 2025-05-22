@@ -53,13 +53,4 @@ public class TelaBazar extends JFrame implements ActionListener {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new TelaBazar().mostrar());
     }
-
-    // Métodos para acessar as telas de adicionar e editar produto (podem ser úteis externamente)
-    public TelaAdicionarProduto getTelaAdicionarProduto() {
-        return telaAdicionarProduto;
-    }
-
-    public TelaEditarProduto getTelaEditarProduto() {
-        return telaEditarProduto;
-    }
 }
