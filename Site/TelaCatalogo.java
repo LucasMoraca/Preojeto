@@ -16,6 +16,7 @@ public class TelaCatalogo extends JFrame {
     private JPanel produtosPanel;
     private JScrollPane scrollPane;
     private List<ProdutoCatalogo> listaDeProdutos;
+    private JButton carrinhoButton; // Botão para ir ao carrinho
 
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projetoa3";
     private static final String DB_USER = "root";
@@ -26,6 +27,18 @@ public class TelaCatalogo extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(800, 600);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout()); // Usando BorderLayout para posicionar o botão do carrinho
+
+        // Painel para o botão do carrinho no topo
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        carrinhoButton = new JButton("Carrinho");
+        carrinhoButton.addActionListener(e -> {
+            // Abre a tela do carrinho
+            TelaCarrinho telaCarrinho = new TelaCarrinho();
+            telaCarrinho.setVisible(true);
+        });
+        topPanel.add(carrinhoButton);
+        add(topPanel, BorderLayout.NORTH);
 
         produtosPanel = new JPanel();
         produtosPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 15));
@@ -64,7 +77,7 @@ public class TelaCatalogo extends JFrame {
         for (ProdutoCatalogo produto : listaDeProdutos) {
             JPanel produtoPanel = new JPanel();
             produtoPanel.setLayout(new BoxLayout(produtoPanel, BoxLayout.Y_AXIS));
-            produtoPanel.setPreferredSize(new Dimension(180, 250));
+            produtoPanel.setPreferredSize(new Dimension(180, 270)); // Ajustei a altura
             produtoPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
             JLabel nomeLabel = new JLabel(produto.getNome());
@@ -73,19 +86,18 @@ public class TelaCatalogo extends JFrame {
             ImageIcon imageIcon = null;
             if (produto.getImagemPath() != null && !produto.getImagemPath().isEmpty()) {
                 try {
-                    // Tenta carregar a imagem do arquivo. Ajuste o caminho se necessário.
-                    java.net.URL imgURL = getClass().getResource("/imagens/" + produto.getImagemPath()); // Tenta carregar de um pacote 'imagens'
+                    java.net.URL imgURL = getClass().getResource("/imagens/" + produto.getImagemPath());
                     if (imgURL == null) {
-                        imgURL = new java.io.File(produto.getImagemPath()).toURI().toURL(); // Tenta carregar do sistema de arquivos
+                        imgURL = new java.io.File(produto.getImagemPath()).toURI().toURL();
                     }
                     Image image = new ImageIcon(imgURL).getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
                     imageIcon = new ImageIcon(image);
                 } catch (Exception e) {
                     System.err.println("Erro ao carregar imagem: " + produto.getImagemPath() + " - " + e.getMessage());
-                    imageIcon = new ImageIcon(new ImageIcon(getClass().getResource("/imagens/no_image.png")).getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH)); // Imagem padrão se falhar
+                    imageIcon = new ImageIcon(new ImageIcon(getClass().getResource("/imagens/no_image.png")).getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH));
                 }
             } else {
-                imageIcon = new ImageIcon(new ImageIcon(getClass().getResource("/imagens/no_image.png")).getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH)); // Imagem padrão se não houver path
+                imageIcon = new ImageIcon(new ImageIcon(getClass().getResource("/imagens/no_image.png")).getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH));
             }
             JLabel imagemLabel = new JLabel(imageIcon);
             imagemLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -93,16 +105,17 @@ public class TelaCatalogo extends JFrame {
             JLabel valorLabel = new JLabel("R$ " + String.format("%.2f", produto.getValor()));
             valorLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-            JButton detalhesButton = new JButton("Ver Detalhes");
-            detalhesButton.addActionListener(e -> {
-                // Aqui você implementaria a lógica para ver os detalhes do produto
-                JOptionPane.showMessageDialog(TelaCatalogo.this, "Detalhes do produto ID: " + produto.getId(), "Detalhes", JOptionPane.INFORMATION_MESSAGE);
+            JButton adicionarCarrinhoButton = new JButton("Adicionar ao Carrinho");
+            adicionarCarrinhoButton.addActionListener(e -> {
+                // Abre a tela TelaSelecaoTamanho
+                TelaSelecaoTamanho telaSelecao = new TelaSelecaoTamanho(produto.getId(), produto.getNome(), produto.getValor());
+                telaSelecao.setVisible(true);
             });
 
             produtoPanel.add(nomeLabel);
             produtoPanel.add(imagemLabel);
             produtoPanel.add(valorLabel);
-            produtoPanel.add(detalhesButton);
+            produtoPanel.add(adicionarCarrinhoButton);
 
             produtosPanel.add(produtoPanel);
         }
