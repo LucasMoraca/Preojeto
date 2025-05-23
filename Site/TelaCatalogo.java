@@ -14,6 +14,7 @@ public class TelaCatalogo extends JFrame {
     private JScrollPane scrollPane;
     private List<ProdutoCatalogo> listaDeProdutos;
     private JButton carrinhoButton;
+    private JButton pedidosButton; // Novo botão
 
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projetoa3";
     private static final String DB_USER = "root";
@@ -26,14 +27,23 @@ public class TelaCatalogo extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Painel do topo com botão do carrinho
+        // Painel do topo com botões do carrinho e pedidos
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        pedidosButton = new JButton("Pedidos"); // Inicializa o botão de pedidos
+        pedidosButton.addActionListener(e -> {
+            TelaPedidosCliente telaPedidos = new TelaPedidosCliente();
+            telaPedidos.setVisible(true);
+        });
+        topPanel.add(pedidosButton); // Adiciona o botão de pedidos ao painel do topo
+
         carrinhoButton = new JButton("Carrinho");
         carrinhoButton.addActionListener(e -> {
             TelaCarrinho telaCarrinho = new TelaCarrinho();
             telaCarrinho.setVisible(true);
         });
         topPanel.add(carrinhoButton);
+
         add(topPanel, BorderLayout.NORTH);
 
         produtosPanel = new JPanel();
