@@ -1,3 +1,4 @@
+// TelaLogin.java
 package Site;
 
 import javax.swing.*;
@@ -78,7 +79,7 @@ public class TelaLogin extends JFrame {
 
     private String autenticarUsuario(String email, String senha) {
         String tipo = null;
-        String sql = "SELECT id, nome, senha, tipo FROM usuarios WHERE email = ?";
+        String sql = "SELECT id, nome, senha, tipo, email FROM usuarios WHERE email = ?"; // Incluímos a coluna email
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, email);
@@ -90,7 +91,10 @@ public class TelaLogin extends JFrame {
                     if (tipo.equals("cliente")) {
                         int userId = rs.getInt("id");
                         String nomeUsuario = rs.getString("nome");
-                        SessaoUsuario.getInstance().iniciarSessao(userId, nomeUsuario, tipo);
+                        String emailUsuario = rs.getString("email"); // Obtemos o email
+                        SessaoUsuario.getInstance().iniciarSessao(userId, nomeUsuario, tipo, emailUsuario); // Passamos o email
+                    } else {
+                        SessaoUsuario.getInstance().iniciarSessao(rs.getInt("id"), rs.getString("nome"), tipo, rs.getString("email"));
                     }
                 }
             }

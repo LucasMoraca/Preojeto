@@ -1,3 +1,4 @@
+// TelaCarrinho.java
 package Site;
 
 import javax.swing.*;
@@ -24,7 +25,8 @@ public class TelaCarrinho extends JFrame {
     private JRadioButton pixRadioButton;
     private JRadioButton creditoRadioButton;
     private JButton confirmarCompraButton;
-    private int usuarioIdCliente = 1; // TODO: Obter o ID do cliente logado dinamicamente
+    private int usuarioIdCliente = SessaoUsuario.getInstance().getUsuarioId() != null ? SessaoUsuario.getInstance().getUsuarioId() : 1; // Obtém ID da sessão
+    // private String emailUsuarioLogado = obterEmailUsuarioLogado(); // Agora obtemos dinamicamente
 
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/projetoa3";
     private static final String DB_USER = "root";
@@ -89,7 +91,7 @@ public class TelaCarrinho extends JFrame {
                 return;
             }
 
-            int pedidoId = salvarPedido(usuarioIdCliente, endereco, formaPagamento, totalCompra);
+            int pedidoId = salvarPedido(usuarioIdCliente, endereco, formaPagamento, totalCompra, obterEmailUsuarioLogado());
 
             if (pedidoId > 0) {
                 boolean itensSalvos = salvarItensPedido(pedidoId, Carrinho.getInstance().getItens());
@@ -193,15 +195,20 @@ public class TelaCarrinho extends JFrame {
         totalLabel.setText("Total: R$ " + String.format("%.2f", calcularTotalCarrinhoSingleton()));
     }
 
-    private int salvarPedido(int usuarioId, String endereco, String formaPagamento, double total) {
+    private String obterEmailUsuarioLogado() {
+        return SessaoUsuario.getInstance().getEmailUsuario();
+    }
+
+    private int salvarPedido(int usuarioId, String endereco, String formaPagamento, double total, String email) {
         int pedidoId = -1;
-        String sql = "INSERT INTO pedidos (usuario_id, endereco_entrega, forma_pagamento, total) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO pedidos (usuario_id, endereco_entrega, forma_pagamento, total, email) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setInt(1, usuarioId);
             pstmt.setString(2, endereco);
             pstmt.setString(3, formaPagamento);
             pstmt.setDouble(4, total);
+            pstmt.setString(5, email);
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
                 ResultSet generatedKeys = pstmt.getGeneratedKeys();
