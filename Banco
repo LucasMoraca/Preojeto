@@ -59,3 +59,5 @@ CREATE TABLE IF NOT EXISTS itens_pedido (
 SELECT id, nome, valor, imagens1_path FROM produtos
 ALTER TABLE itens_pedido
 ADD COLUMN tamanho VARCHAR(50);
+ALTER TABLE nome_da_sua_tabela_de_pedidos
+ADD COLUMN email VARCHAR(255);
