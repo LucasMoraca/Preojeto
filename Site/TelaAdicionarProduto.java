@@ -11,6 +11,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * {@code TelaAdicionarProduto} é uma janela para adicionar novos produtos ao banco de dados.
+ * Permite inserir nome, quantidades por tamanho (P, M, G), valor, descrição e até três imagens para o produto.
+ */
 public class TelaAdicionarProduto extends JFrame {
 
     private JTextField nomeField;
@@ -33,6 +37,10 @@ public class TelaAdicionarProduto extends JFrame {
     // Pasta onde as imagens ficarão acessíveis no seu projeto web
     private static final String IMAGES_DIRECTORY = "imagens_produtos";
 
+    /**
+     * Construtor da classe {@code TelaAdicionarProduto}.
+     * Inicializa a interface gráfica para a adição de produtos.
+     */
     public TelaAdicionarProduto() {
         setTitle("Adicionar Produto");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -100,6 +108,11 @@ public class TelaAdicionarProduto extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Abre um diálogo para o usuário selecionar uma imagem e armazena o caminho do arquivo.
+     *
+     * @param imagemNumero O número da imagem que está sendo selecionada (1, 2 ou 3).
+     */
     private void selecionarImagem(int imagemNumero) {
         JFileChooser fileChooser = new JFileChooser();
         int result = fileChooser.showOpenDialog(this);
@@ -116,6 +129,12 @@ public class TelaAdicionarProduto extends JFrame {
         }
     }
 
+    /**
+     * Salva os dados do produto (nome, quantidades, valor, descrição e caminhos das imagens) no banco de dados.
+     * Copia as imagens selecionadas para um diretório específico do projeto.
+     *
+     * @param e O evento de ação que disparou este método (clique no botão Salvar Produto).
+     */
     private void salvarProdutoNoBanco(ActionEvent e) {
         String nome = nomeField.getText();
         String quantidadePStr = quantidadePField.getText();
@@ -144,11 +163,11 @@ public class TelaAdicionarProduto extends JFrame {
 
             Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             String sql = """
-                INSERT INTO produtos 
-                (nome, descricao, valor, quantidade_p, quantidade_m, quantidade_g, 
-                 imagens1_path, imagens2_path, imagens3_path)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """;
+                    INSERT INTO produtos 
+                    (nome, descricao, valor, quantidade_p, quantidade_m, quantidade_g, 
+                     imagens1_path, imagens2_path, imagens3_path)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """;
             PreparedStatement pstmt = conn.prepareStatement(sql);
 
             pstmt.setString(1, nome);
@@ -192,6 +211,12 @@ public class TelaAdicionarProduto extends JFrame {
         }
     }
 
+    /**
+     * Copia as imagens selecionadas para o diretório de imagens do projeto.
+     *
+     * @return Uma lista com os caminhos relativos das imagens copiadas dentro do diretório de imagens.
+     * @throws IOException Se ocorrer um erro durante a cópia dos arquivos.
+     */
     private List<String> copiarImagensParaDiretorio() throws IOException {
         List<String> novosCaminhos = new ArrayList<>();
         Path directory = Paths.get(IMAGES_DIRECTORY);
@@ -214,6 +239,9 @@ public class TelaAdicionarProduto extends JFrame {
         return novosCaminhos;
     }
 
+    /**
+     * Limpa todos os campos de entrada do formulário.
+     */
     private void limparCampos() {
         nomeField.setText("");
         quantidadePField.setText("");
@@ -224,6 +252,12 @@ public class TelaAdicionarProduto extends JFrame {
         imagePaths.clear();
     }
 
+    /**
+     * Método principal para criar e exibir a {@code TelaAdicionarProduto}.
+     * Executa a criação da interface gráfica na thread de despacho de eventos (EDT).
+     *
+     * @param args Argumentos da linha de comando (não utilizados).
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(TelaAdicionarProduto::new);
     }

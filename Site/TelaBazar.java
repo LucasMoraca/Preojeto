@@ -5,8 +5,16 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/**
+ * {@code TelaBazar} é uma janela que oferece funcionalidades exclusivas para usuários do tipo "bazar".
+ * Ela permite adicionar, editar produtos e visualizar os pedidos realizados.
+ */
 public class TelaBazar extends JFrame {
 
+    /**
+     * Construtor da classe {@code TelaBazar}.
+     * Inicializa a interface gráfica com botões para adicionar produto, editar produto e visualizar pedidos.
+     */
     public TelaBazar() {
         setTitle("Página do Bazar");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -18,6 +26,10 @@ public class TelaBazar extends JFrame {
         JButton editarProdutoButton = new JButton("Editar Produto");
         JButton pedidosButton = new JButton("Pedidos"); // Novo botão
 
+        /**
+         * Listener para o botão "Adicionar Produto".
+         * Ao ser clicado, abre a {@code TelaAdicionarProduto}.
+         */
         adicionarProdutoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -26,6 +38,10 @@ public class TelaBazar extends JFrame {
             }
         });
 
+        /**
+         * Listener para o botão "Editar Produto".
+         * Ao ser clicado, abre a {@code TelaEditarProduto}.
+         */
         editarProdutoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -34,6 +50,10 @@ public class TelaBazar extends JFrame {
             }
         });
 
+        /**
+         * Listener para o botão "Pedidos".
+         * Ao ser clicado, abre a {@code TelaPedidos}.
+         */
         pedidosButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -49,6 +69,12 @@ public class TelaBazar extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Método principal para criar e exibir a {@code TelaBazar}.
+     * Executa a criação da interface gráfica na thread de despacho de eventos (EDT).
+     *
+     * @param args Argumentos da linha de comando (não utilizados).
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new TelaBazar());
     }
